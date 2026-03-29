@@ -10,7 +10,7 @@ export default function Home() {
       <h2>Endpoints</h2>
       <ul>
         <li>
-          <code>GET /api/health</code> — Health check
+          <code>GET /api/health</code> — Health Check
         </li>
         <li>
           <code>GET /api/error</code> — Trigger a test error (for Sentry)
