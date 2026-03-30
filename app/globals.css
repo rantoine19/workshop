@@ -176,3 +176,61 @@ button[type="submit"]:disabled {
   background: #f5f5f5;
   color: #333;
 }
+
+/* Upload page */
+.upload-container {
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.upload-container > p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.upload-area {
+  margin-bottom: 1rem;
+}
+
+.upload-area input[type="file"] {
+  display: none;
+}
+
+.upload-label {
+  display: block;
+  padding: 2rem;
+  border: 2px dashed #d0d0d0;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  color: #666;
+  transition: border-color 0.2s;
+}
+
+.upload-label:hover {
+  border-color: #0066cc;
+  color: #0066cc;
+}
+
+.file-info {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.success-message {
+  color: #006600;
+  background: #f0fff0;
+  border: 1px solid #ccffcc;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.upload-note {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #999;
+  text-align: center;
+}
