@@ -30,15 +30,12 @@ You are a Senior Full-Stack Engineer. Your primary responsibility is to autonomo
 
 ## Project Context
 
-<!--
-TEMPLATE: Fill in project-specific context here when using this template.
-
-Example fields to populate:
-- **Platform(s)**: [Web, Mobile, Desktop, etc.]
-- **Tech Stack**: [Languages, frameworks, and tools used]
-- **Architecture**: [Monolith, microservices, serverless, etc.]
-- **Key Quality Standards**: [Performance, accessibility, security requirements]
--->
+- **Product**: HealthChat AI — HIPAA-compliant AI chatbot embedded in One Stop Wellness for uploading medical reports, chatting with health data in plain language, generating doctor visit prep questions, and displaying risk flags (G/Y/R).
+- **Platform(s)**: Web (Next.js 15 full-stack, hosted on Render)
+- **Tech Stack**: TypeScript, Next.js 15 (App Router), React 19, Tailwind CSS, shadcn/ui, Supabase PostgreSQL (RLS-enabled, HIPAA BAA), Supabase Auth (JWT), Supabase Storage (S3-backed, encrypted at rest), Anthropic Claude API (chat + vision), Vitest + React Testing Library + jsdom, GitHub Actions CI/CD, Sentry monitoring
+- **Architecture**: Full-stack monolith (Next.js) with Row-Level Security for multi-tenant isolation, Claude Vision for document parsing (no separate OCR), Supabase as unified backend (DB + Auth + Storage)
+- **Key Quality Standards**: HIPAA compliance (no PHI in logs, encryption at rest/transit, RLS tenant isolation), AI safety (no medical diagnoses, disclaimer on all responses), 5th grade reading level for health explanations, secure file upload handling
+- **Domain Entities**: User, Profile, Report, ParsedResult, RiskFlag, ChatSession, ChatMessage, DoctorQuestion
 
 ## Tools and Capabilities
 
@@ -47,8 +44,8 @@ Example fields to populate:
 This agent MUST operate as the designated worker bot account. Before ANY GitHub operations:
 
 ```bash
-# Switch to worker bot account (replace {worker-bot} with your org's worker account)
-gh auth switch --user {worker-bot}
+# Switch to worker bot account (replace va-worker with your org's worker account)
+gh auth switch --user va-worker
 
 # Verify correct account is active
 gh auth status
@@ -59,11 +56,7 @@ gh auth status
 - Separation of duties: worker bot creates PRs, reviewer bot reviews, human merges
 - Human can distinguish between worker and reviewer actions in the audit trail
 
-<!--
-TEMPLATE: Replace {worker-bot} with your organization's worker bot username.
-Example: va-worker, myorg-worker, etc.
-See .claude/README.md for bot account setup instructions.
--->
+<!-- Worker bot account: va-worker (configured via AGILE_FLOW_WORKER_ACCOUNT) -->
 
 **GitHub MCP Server**: You have access to the GitHub MCP server with native tools for interacting with issues, pull requests, and the project board. This is your **primary method** for all GitHub operations.
 
@@ -127,26 +120,37 @@ See .claude/README.md for bot account setup instructions.
 
 You must strictly adhere to the project's architecture and coding standards defined in `CLAUDE.md`.
 
-<!--
-TEMPLATE: Fill in project-specific implementation standards here.
-
-Example sections:
 **Technology Stack:**
-- [Language and version]
-- [Framework]
-- [Build tooling]
-- [Testing framework]
+- TypeScript (strict mode)
+- Next.js 15 (App Router, React 19)
+- Tailwind CSS + shadcn/ui for UI components
+- Supabase PostgreSQL with Row-Level Security
+- Supabase Auth (JWT, email/password + OAuth)
+- Supabase Storage (encrypted at rest, S3-backed)
+- Anthropic Claude API (chat + vision for document parsing)
 
 **Code Quality:**
-- [Type safety requirements]
-- [Code style guidelines]
-- [Documentation standards]
+- TypeScript strict mode required throughout
+- ESLint for code style enforcement
+- No PHI (Protected Health Information) in logs or error messages
+- AI responses must include medical disclaimer
+- Use `window.location.origin` for URLs (never hardcode)
 
 **Testing Requirements:**
-- [Test types required]
-- [Coverage thresholds]
-- [Pre-commit checks]
--->
+- Unit tests: All API route handlers, utility functions (Vitest)
+- Integration tests: Upload -> parse -> chat flow
+- Component tests: Chat interface, upload panel, risk display (React Testing Library + jsdom)
+- Coverage: 80% API routes, 70% overall
+- Pre-push hook runs lint + tests automatically
+
+**Build & Verification Commands:**
+```bash
+npm run dev          # Dev server (Next.js on port 3000)
+npm run lint         # ESLint
+npm run typecheck    # tsc --noEmit
+npm test             # Vitest
+npm run build        # Production build
+```
 
 ### 4. Pull Request Creation
 

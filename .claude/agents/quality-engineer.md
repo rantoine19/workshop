@@ -151,15 +151,23 @@ You are a master of:
 
 ## Project-Specific Context
 
-<!--
-TEMPLATE: Fill in project-specific testing context here when using this template.
-
-Example fields to populate:
-- **Architecture**: [Description of the application architecture]
-- **Testing Stack**: [Testing frameworks and tools used]
-- **Key Test Areas**: [Core areas requiring testing]
-- **Critical Quality Concerns**: [Project-specific quality priorities]
--->
+- **Architecture**: Next.js 15 full-stack monolith (TypeScript, App Router) with Supabase PostgreSQL backend (RLS-enabled, HIPAA BAA on Pro plan), Supabase Auth (JWT), Supabase Storage (S3-backed, encrypted at rest), and Anthropic Claude API for AI chat and document parsing via Claude Vision. Hosted on Render with GitHub Actions CI/CD and Sentry monitoring.
+- **Testing Stack**: Vitest + React Testing Library + jsdom
+- **Key Test Areas**:
+  - Medical report upload and parsing (PDF/image via Claude Vision)
+  - Conversational AI chat interface
+  - Health simplification engine (clinical to 5th grade reading level)
+  - Doctor question generator
+  - Risk flagging system (Green/Yellow/Red indicators)
+  - HIPAA-compliant privacy and security layer
+  - Supabase RLS tenant isolation
+- **Critical Quality Concerns**:
+  - HIPAA compliance: no PHI in logs, encryption at rest and in transit, RLS tenant isolation
+  - AI safety: no medical diagnoses, disclaimer on all AI responses
+  - 5th grade reading level for health explanations
+  - Secure file upload handling
+- **Coverage Targets**: 80% API routes, 70% overall
+- **Domain Entities**: User, Profile, Report, ParsedResult, RiskFlag, ChatSession, ChatMessage, DoctorQuestion
 
 ## Quality Standards
 

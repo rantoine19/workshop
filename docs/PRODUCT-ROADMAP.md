@@ -1,89 +1,87 @@
 # Product Roadmap
 
-<!--
-TEMPLATE: This is a template roadmap. Run /bootstrap-product to generate
-a roadmap based on your PRD.
-
-Replace all [PLACEHOLDER] content with your actual product plans.
-Remove the EXAMPLE markers when you replace the content.
--->
-
 ## Overview
 
-[One paragraph describing the product direction and timeline.]
+HealthChat AI targets an ASAP launch within 1-2 weeks, focused on delivering the core value proposition: helping users understand their health data in plain language and prepare for doctor visits. The roadmap is aggressive given time constraints, prioritizing the essential features that deliver immediate user value while maintaining HIPAA compliance.
 
-## Phase 1: MVP
+## Phase 1: MVP (Week 1-2)
 
-- **Target**: [Date or timeframe]
-- **Goal**: Deliver core value proposition to first users
+- **Target**: Launch within 1-2 weeks
+- **Goal**: Deliver core value — upload a medical report, understand it in plain language, and get doctor visit prep questions
 
 ### Features
 
-| Feature | Priority | Status |
-|---------|----------|--------|
-| [Feature from PRD] | P0 | Backlog |
-| [Feature from PRD] | P0 | Backlog |
-| [Feature from PRD] | P1 | Backlog |
+1. **Medical Report Upload & Parsing**
+   - PDF and image upload with OCR extraction
+   - Biomarker detection and abnormal range flagging
+
+2. **Conversational AI Interface**
+   - Natural language chat about uploaded health data
+   - Context-aware, session-scoped memory
+
+3. **Health Simplification Engine**
+   - Clinical language converted to 5th grade reading level
+   - Structured output: what it means, why it matters, what to do next
+
+4. **Doctor Question Generator**
+   - Auto-generated clarifying questions based on results
+   - Follow-up and risk-based prompts
+
+5. **Risk Flagging System**
+   - Green / Yellow / Red indicators based on lab ranges and trends
+
+6. **HIPAA Compliance Layer**
+   - Encrypted storage (in transit + at rest)
+   - Role-based access control and audit logs
+   - BAA agreements in place
 
 ### Success Criteria
 
-- [ ] [Primary metric from PRD] reaches [target]
-- [ ] [Acceptance criterion]
+- 500 Monthly Active Users within 3 months
+- 60% 30-day retention
+- 75% of users generate doctor questions after uploading a report
+- 75% of users read their health summaries
 
-## Phase 2: Iteration
+## Phase 2: Iteration (Post-MVP, Month 2-3)
 
-- **Target**: Post-MVP (1-2 months after launch)
-- **Goal**: Expand based on user feedback
+- **Target**: Weeks 3-12
+- **Goal**: Expand based on user feedback and usage data
 
-### Features
+### Potential Features (TBD based on feedback)
 
-| Feature | Priority | Status |
-|---------|----------|--------|
-| [Based on user feedback] | TBD | Backlog |
+- Trend tracking across multiple report uploads over time
+- Enhanced risk flagging with personalized recommendations
+- Report sharing with healthcare providers
+- Multi-language support for health simplification
+- Integration with additional data sources (wearables, EHR)
 
-### Success Criteria
+## Phase 3: Expansion (Month 4+)
 
-- [ ] [Retention or engagement metric]
+- **Target**: Month 4 onward
+- **Goal**: Scale the platform and deepen engagement
 
-## Phase 3: Growth
+### Potential Features
 
-- **Target**: [3-6 months post-launch]
-- **Goal**: Scale and expand capabilities
+- Voice-to-text journaling for health narratives
+- Mobile-native app (iOS/Android)
+- Chat-based health storytelling
+- Employer analytics dashboard (aggregate, de-identified)
+- Multi-modal inputs beyond lab reports (prescriptions, imaging)
 
-### Features
+## Constraints & Risks
 
-| Feature | Priority | Status |
-|---------|----------|--------|
-| [Growth feature] | TBD | Backlog |
+| Risk | Impact | Mitigation |
+|---|---|---|
+| **Tight timeline (1-2 weeks)** | May need to reduce scope | Ruthlessly prioritize core chat + upload flow |
+| **HIPAA compliance** | Requires secure infrastructure from day 1 | Use HIPAA-eligible cloud services, BAAs in place before launch |
+| **AI accuracy on medical data** | Incorrect simplifications could mislead users | Clear disclaimers, guard rails, medical review of prompt engineering |
+| **User trust** | Users may hesitate to upload PHI | Transparent privacy policy, encryption messaging, HIPAA badges |
 
-## Milestone Definitions
+## Key Milestones
 
-| Milestone | Criteria | Target Date |
-|-----------|----------|-------------|
-| M1: MVP Launch | Core features live, first users onboarded | [Date] |
-| M2: Product-Market Fit | [Retention/engagement threshold] | [Date] |
-| M3: Growth | [Scale/revenue threshold] | [Date] |
-
-## Constraints and Risks
-
-| Risk | Phase | Mitigation |
-|------|-------|------------|
-| [Risk from PRD] | 1 | [Mitigation strategy] |
-
-## Dependencies
-
-```text
-Phase 1: MVP
-    |
-    v
-Phase 2: Iteration (requires user feedback from Phase 1)
-    |
-    v
-Phase 3: Growth (requires product-market fit from Phase 2)
-```
-
-## Revision History
-
-| Date | Change | Author |
-|------|--------|--------|
-| [Date] | Initial roadmap creation | [Name] |
+| Milestone | Target Date | Description |
+|---|---|---|
+| MVP Launch | Week 2 | Core upload + chat + simplification + doctor prep live |
+| 100 MAU | Month 1 | Initial adoption within One Stop Wellness users |
+| 500 MAU | Month 3 | Primary success metric achieved |
+| Phase 2 Kickoff | Month 2 | Begin iteration based on user feedback |

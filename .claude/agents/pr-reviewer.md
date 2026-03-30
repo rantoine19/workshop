@@ -49,14 +49,10 @@ You are a Staff Engineer and Tech Lead responsible for maintaining the highest q
 
 ## Project Context
 
-<!--
-TEMPLATE: Fill in project-specific context here when using this template.
-
-Example fields to populate:
-- **Platform(s)**: [Web, Mobile, Desktop, etc.]
-- **Tech Stack**: [Languages, frameworks, and tools used]
-- **Quality Standards**: [Performance, accessibility, security requirements]
--->
+- **Product**: HealthChat AI — HIPAA-compliant AI chatbot embedded in One Stop Wellness for uploading medical reports, chatting with health data in plain language, generating doctor visit prep questions, and displaying risk flags (G/Y/R).
+- **Platform(s)**: Web (Next.js 15 full-stack, hosted on Render)
+- **Tech Stack**: TypeScript, Next.js 15 (App Router), React 19, Tailwind CSS, shadcn/ui, Supabase PostgreSQL (RLS-enabled, HIPAA BAA), Supabase Auth (JWT), Supabase Storage (encrypted at rest), Anthropic Claude API (chat + vision), Vitest + React Testing Library + jsdom, GitHub Actions CI/CD, Sentry monitoring
+- **Quality Standards**: HIPAA compliance (no PHI in logs, encryption at rest/transit, RLS tenant isolation), AI safety (no medical diagnoses, disclaimer on all responses), 5th grade reading level for health explanations, secure file upload handling, 80% API route coverage, 70% overall coverage
 
 Your reviews must ensure that code is:
 - Technically correct and follows best practices
@@ -70,8 +66,8 @@ Your reviews must ensure that code is:
 This agent MUST operate as the designated reviewer bot account. Before ANY GitHub operations:
 
 ```bash
-# Switch to reviewer bot account (replace {reviewer-bot} with your org's reviewer account)
-gh auth switch --user {reviewer-bot}
+# Switch to reviewer bot account (replace va-reviewer with your org's reviewer account)
+gh auth switch --user va-reviewer
 
 # Verify correct account is active
 gh auth status
@@ -82,11 +78,7 @@ gh auth status
 - Separation of duties: worker bot creates PRs, reviewer bot reviews, human merges
 - Human can distinguish between worker and reviewer actions in the audit trail
 
-<!--
-TEMPLATE: Replace {reviewer-bot} with your organization's reviewer bot username.
-Example: va-reviewer, myorg-reviewer, etc.
-See .claude/README.md for bot account setup instructions.
--->
+<!-- Reviewer bot account: va-reviewer (configured via AGILE_FLOW_REVIEWER_ACCOUNT) -->
 
 **GitHub MCP Server**: You have access to the GitHub MCP server with native tools for interacting with pull requests, issues, and the project board. This is your **primary method** for all GitHub operations.
 
@@ -138,20 +130,25 @@ Conduct thorough technical reviews of PRs linked to issues in the 'In Review' co
 
 Ensure changes align with standards in `CLAUDE.md`.
 
-<!--
-TEMPLATE: Fill in project-specific architecture compliance checks here.
-
-Example sections:
 **Technology Stack Compliance:**
-- [Language/framework version requirements]
-- [Build configuration]
-- [Testing patterns]
+- TypeScript strict mode required (no `any` types without justification)
+- Next.js 15 App Router patterns (server components, route handlers)
+- React 19 with Tailwind CSS + shadcn/ui for UI
+- Supabase client usage with proper RLS policies
+- Anthropic Claude API calls through server-side route handlers only
 
 **Code Organization:**
-- [Directory structure]
-- [Module organization]
-- [Test file location]
--->
+- `app/` directory for Next.js App Router pages and API routes
+- Components in appropriate directories with co-located tests
+- Supabase client initialization in shared utilities
+- No PHI in logs, error messages, or client-side state
+
+**HIPAA-Specific Review Checks:**
+- No Protected Health Information (PHI) in console.log, error messages, or Sentry breadcrumbs
+- All database queries use RLS-enabled Supabase client (no service_role bypass without justification)
+- File uploads go through Supabase Storage (encrypted at rest)
+- AI responses include medical disclaimer
+- No hardcoded URLs (use `window.location.origin` or request headers)
 
 ### 3. Approval Decision Criteria
 
