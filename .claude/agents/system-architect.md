@@ -413,28 +413,60 @@ Use the **ATAM (Architecture Tradeoff Analysis Method)**:
 
 ## Project-Specific Domain Analysis
 
-<!--
-TEMPLATE: Fill in project-specific domain analysis here when using this template.
-
-Example structure:
 ### Bounded Contexts
 
-#### 1. [Context Name]
+#### 1. Identity & Access Context
 **Aggregates:**
-- `Entity` (root) → `ChildEntity1`, `ChildEntity2`
-
-**Value Objects:**
-- `ValueObject1`, `ValueObject2`
+- `User` (root) → `Profile`
 
 **Domain Events:**
-- `Event1`, `Event2`
+- `UserRegistered`, `UserAuthenticated`, `ProfileUpdated`
 
 **Ubiquitous Language:**
-- Term1, Term2, Term3
+- User, Profile, Authentication, Session, JWT
+
+#### 2. Document Ingestion Context
+**Aggregates:**
+- `Report` (root) → `ParsedResult`
+
+**Domain Events:**
+- `ReportUploaded`, `ReportParsed`, `ParsingFailed`
+
+**Ubiquitous Language:**
+- Report, Upload, Parse, Claude Vision, Medical Document, PDF, Image
+
+#### 3. Conversation Context
+**Aggregates:**
+- `ChatSession` (root) → `ChatMessage`
+
+**Domain Events:**
+- `SessionStarted`, `MessageSent`, `AIResponseGenerated`
+
+**Ubiquitous Language:**
+- Chat Session, Message, AI Response, Health Explanation, 5th Grade Reading Level, Disclaimer
+
+#### 4. Health Intelligence Context
+**Aggregates:**
+- `RiskFlag` (associated with `ParsedResult`)
+- `DoctorQuestion` (generated per `ChatSession` or `Report`)
+
+**Domain Events:**
+- `RiskFlagged`, `DoctorQuestionsGenerated`
+
+**Ubiquitous Language:**
+- Risk Flag (Green/Yellow/Red), Doctor Question, Health Simplification, Clinical Term
 
 ### Context Mapping
-[Diagram showing how contexts relate to each other]
--->
+- Identity & Access → (upstream) → all other contexts (auth required)
+- Document Ingestion → (publishes events to) → Health Intelligence (parsed results trigger risk flagging)
+- Document Ingestion → (feeds data to) → Conversation (parsed reports available in chat)
+- Health Intelligence → (enriches) → Conversation (risk flags and doctor questions shown in chat)
+
+### Architecture Decision Records
+- ADR-001: Next.js Full-Stack Monolith (ship fast, 1-2 week timeline)
+- ADR-002: Claude Vision for Document Parsing (single AI provider, no separate OCR)
+- ADR-003: Supabase as Unified Backend (DB + Auth + Storage, integrated data layer)
+- ADR-004: No Separate OCR Service (simplicity over accuracy edge cases)
 
 ## Communication Style
 

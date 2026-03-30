@@ -144,12 +144,14 @@ TEMPLATE: Fill in project-specific details below when using this template.
 ### Project Information
 
 - **License**: BSL 1.1 (converts to Apache 2.0 after 3 years per release)
-- **Project Name**: [Your project name]
-- **Repository**: [GitHub repo URL]
-- **Project Board**: [GitHub project board URL]
-- **Tech Stack**: [Languages, frameworks, tools]
-- **Database**: [Supabase (recommended) — provides ephemeral PR databases via branching]
-- **Organization**: [GitHub org name]
+- **Project Name**: HealthChat AI
+- **Repository**: https://github.com/rantoine19/workshop
+- **Tech Stack**: Next.js 15 (TypeScript), React 19, Tailwind CSS, shadcn/ui, Supabase (PostgreSQL, Auth, Storage), Anthropic Claude API, Vitest
+- **Database**: Supabase (PostgreSQL) — HIPAA BAA on Pro plan, RLS for tenant isolation, ephemeral PR databases via branching
+- **AI Provider**: Anthropic Claude — multimodal (vision for document parsing, chat for conversational AI)
+- **Hosting**: Render
+- **Project Board**: https://github.com/users/rantoine19/projects/1
+- **Organization**: rantoine19
 
 ### Build & Test Commands
 
