@@ -886,3 +886,148 @@ button[type="submit"]:disabled {
   margin-bottom: 1rem;
   color: #1a1a1a;
 }
+
+/* =========================
+   Profile Page Styles
+   ========================= */
+
+.profile-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.profile-page--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #666;
+}
+
+.profile-page__spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #0066ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.profile-page__header {
+  margin-bottom: 2rem;
+}
+
+.profile-page__back {
+  display: inline-block;
+  color: #0066ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.profile-page__back:hover {
+  text-decoration: underline;
+}
+
+.profile-page__header h1 {
+  font-size: 1.5rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.profile-page__header p {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.profile-page__error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.profile-page__success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.profile-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.profile-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-page__field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.profile-page__field input,
+.profile-page__field select {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #333;
+  background: #fff;
+}
+
+.profile-page__field input:focus,
+.profile-page__field select:focus {
+  outline: none;
+  border-color: #0066ff;
+  box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.1);
+}
+
+.profile-page__hint {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.profile-page__submit {
+  padding: 0.75rem 1.5rem;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.profile-page__submit:hover {
+  background: #0052cc;
+}
+
+.profile-page__submit:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
+.profile-page__updated {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #999;
+  text-align: center;
+}
