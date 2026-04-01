@@ -38,6 +38,10 @@ export default async function DashboardPage() {
           <h3>Chat</h3>
           <p>Ask questions about your health data in plain language</p>
         </Link>
+        <Link href="/profile" className="dashboard-card">
+          <h3>Profile</h3>
+          <p>Manage your personal information for personalized health insights</p>
+        </Link>
       </nav>
     </div>
   );
