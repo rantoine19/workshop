@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 
 export const dynamic = "force-dynamic";
@@ -28,13 +29,16 @@ export default async function DashboardPage() {
         </p>
       </section>
 
-      <section className="dashboard-placeholder">
-        <p>
-          Your health dashboard is coming soon. You&apos;ll be able to upload
-          medical reports, chat about your health data, and prepare questions
-          for your doctor.
-        </p>
-      </section>
+      <nav className="dashboard-nav">
+        <Link href="/upload" className="dashboard-card">
+          <h3>Upload Report</h3>
+          <p>Upload a lab report or medical document for analysis</p>
+        </Link>
+        <Link href="/chat" className="dashboard-card">
+          <h3>Chat</h3>
+          <p>Ask questions about your health data in plain language</p>
+        </Link>
+      </nav>
     </div>
   );
 }
