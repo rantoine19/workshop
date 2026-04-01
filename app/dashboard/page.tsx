@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogoutButton } from "./logout-button";
+import ReportList from "@/components/reports/ReportList";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,10 @@ export default async function DashboardPage() {
           <p>Manage your personal information for personalized health insights</p>
         </Link>
       </nav>
+
+      <section className="dashboard-reports">
+        <ReportList />
+      </section>
     </div>
   );
 }
