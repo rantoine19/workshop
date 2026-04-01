@@ -12,6 +12,8 @@ interface Question {
   priority: "high" | "medium" | "low";
 }
 
+const STORAGE_KEY_PREFIX = "doctor-prep-saved-";
+
 export default function DoctorPrepPage() {
   const params = useParams();
   const reportId = params.id as string;
@@ -20,6 +22,19 @@ export default function DoctorPrepPage() {
   const [disclaimer, setDisclaimer] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  // Check if questions are already saved in session storage
+  useEffect(() => {
+    if (reportId) {
+      const stored = sessionStorage.getItem(
+        `${STORAGE_KEY_PREFIX}${reportId}`
+      );
+      if (stored) {
+        setSaved(true);
+      }
+    }
+  }, [reportId]);
 
   const fetchQuestions = useCallback(async () => {
     setLoading(true);
@@ -39,8 +54,8 @@ export default function DoctorPrepPage() {
       }
 
       const reportData = await reportRes.json();
-      const parsedResultId = reportData.report?.parsed_result_id
-        || reportData.parsed_result_id;
+      const parsedResultId =
+        reportData.report?.parsed_result_id || reportData.parsed_result_id;
 
       if (!parsedResultId) {
         throw new Error(
@@ -81,6 +96,19 @@ export default function DoctorPrepPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSave = () => {
+    sessionStorage.setItem(
+      `${STORAGE_KEY_PREFIX}${reportId}`,
+      JSON.stringify(questions)
+    );
+    setSaved(true);
+  };
+
+  const handleUnsave = () => {
+    sessionStorage.removeItem(`${STORAGE_KEY_PREFIX}${reportId}`);
+    setSaved(false);
   };
 
   if (loading) {
@@ -139,6 +167,15 @@ export default function DoctorPrepPage() {
         <button onClick={handlePrint} className="doctor-prep__print">
           Print Questions
         </button>
+        {saved ? (
+          <button onClick={handleUnsave} className="doctor-prep__save doctor-prep__save--saved">
+            Saved
+          </button>
+        ) : (
+          <button onClick={handleSave} className="doctor-prep__save">
+            Save for Later
+          </button>
+        )}
         <Link href="/dashboard" className="doctor-prep__back-link">
           Back to Dashboard
         </Link>
