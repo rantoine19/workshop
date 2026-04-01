@@ -474,3 +474,187 @@ button[type="submit"]:disabled {
   margin: 0.5rem 0.25rem;
   font-size: 0.85rem;
 }
+
+/* =========================
+   Health Summary Styles
+   ========================= */
+
+.health-summary {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.health-summary--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #666;
+}
+
+.health-summary__spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #0066ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.health-summary--error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.health-summary__error {
+  color: #dc2626;
+  font-size: 0.95rem;
+}
+
+.health-summary__retry {
+  padding: 0.5rem 1.5rem;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.health-summary__retry:hover {
+  background: #0052cc;
+}
+
+.health-summary__disclaimer {
+  background: #fff9e6;
+  border: 1px solid #ffd700;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: #856404;
+  line-height: 1.5;
+}
+
+.health-summary__overall {
+  margin-bottom: 2rem;
+}
+
+.health-summary__overall h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: #1a1a1a;
+}
+
+.health-summary__overall p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+.health-summary__biomarkers h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+}
+
+.health-summary__biomarker {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.health-summary__biomarker--green {
+  border-left: 4px solid #22c55e;
+}
+
+.health-summary__biomarker--yellow {
+  border-left: 4px solid #eab308;
+}
+
+.health-summary__biomarker--red {
+  border-left: 4px solid #ef4444;
+}
+
+.health-summary__biomarker-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.health-summary__biomarker-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.health-summary__biomarker-value {
+  font-size: 0.9rem;
+  color: #555;
+  font-family: monospace;
+}
+
+.health-summary__flag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.health-summary__flag--green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.health-summary__flag--yellow {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.health-summary__flag--red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.health-summary__biomarker-body {
+  padding: 1rem;
+}
+
+.health-summary__section {
+  margin-bottom: 0.75rem;
+}
+
+.health-summary__section:last-child {
+  margin-bottom: 0;
+}
+
+.health-summary__section h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.health-summary__section p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #333;
+}
