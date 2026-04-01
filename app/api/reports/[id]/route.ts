@@ -1,0 +1,63 @@
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const supabase = await createClient();
+  const { id: reportId } = await params;
+
+  // Suppress unused variable warning
+  void request;
+
+  // Verify authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Fetch report with parsed result ID
+  const { data: report, error: reportError } = await supabase
+    .from("reports")
+    .select(
+      "id, user_id, file_name, file_type, status, created_at, parsed_results(id)"
+    )
+    .eq("id", reportId)
+    .single();
+
+  if (reportError || !report) {
+    return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  }
+
+  // Verify ownership (defense-in-depth — RLS also enforces this)
+  if (report.user_id !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Extract parsed_result_id from the joined data
+  const parsedResults = report.parsed_results as
+    | Array<{ id: string }>
+    | { id: string }
+    | null;
+  const parsedResultId = Array.isArray(parsedResults)
+    ? parsedResults[0]?.id ?? null
+    : parsedResults?.id ?? null;
+
+  return NextResponse.json(
+    {
+      report: {
+        id: report.id,
+        file_name: report.file_name,
+        file_type: report.file_type,
+        status: report.status,
+        created_at: report.created_at,
+        parsed_result_id: parsedResultId,
+      },
+    },
+    { status: 200 }
+  );
+}
