@@ -427,6 +427,8 @@ button[type="submit"]:disabled {
 
 .chat-input {
   flex: 1;
+  min-width: 0;
+  min-height: 40px;
   padding: 0.6rem 0.75rem;
   border: 1px solid #d0d0d0;
   border-radius: 20px;
@@ -444,6 +446,8 @@ button[type="submit"]:disabled {
 }
 
 .chat-send-button {
+  width: auto;
+  flex-shrink: 0;
   padding: 0.6rem 1.2rem;
   background: #0066cc;
   color: white;
