@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import React from "react";
 
 // ── QuestionCard Component ──────────────────────────────────────────
@@ -196,54 +196,178 @@ describe("Doctor Prep Layout", () => {
   });
 });
 
-// ── Print and Save Feature ──────────────────────────────────────────
+// ── Doctor Prep Page — Rendered Integration Tests ───────────────────
 
-describe("Doctor Prep — print and save", () => {
-  it("print button calls window.print", () => {
+describe("Doctor Prep Page — rendered", () => {
+  const mockFetch = vi.fn();
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.spyOn(globalThis, "fetch").mockImplementation(mockFetch);
+    sessionStorage.clear();
+
+    // Mock next/navigation useParams
+    vi.doMock("next/navigation", () => ({
+      useParams: () => ({ id: "report-123" }),
+    }));
+  });
+
+  function mockSuccessfulFetch() {
+    // First call: GET /api/reports/report-123
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        report: { parsed_result_id: "parsed-1" },
+      }),
+    });
+    // Second call: POST /api/doctor-questions
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        questions: [
+          {
+            id: "q1",
+            question: "What does my glucose level mean?",
+            category: "clarifying",
+            priority: "high",
+          },
+          {
+            id: "q2",
+            question: "Should I change my diet?",
+            category: "lifestyle",
+            priority: "medium",
+          },
+        ],
+        disclaimer:
+          "These questions are suggestions to help guide your conversation with your doctor.",
+      }),
+    });
+  }
+
+  it("renders disclaimer from API response", async () => {
+    mockSuccessfulFetch();
+
+    const { default: DoctorPrepPage } = await import(
+      "@/app/reports/[id]/doctor-prep/page"
+    );
+    render(React.createElement(DoctorPrepPage));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "These questions are suggestions to help guide your conversation with your doctor."
+        )
+      ).toBeDefined();
+    });
+
+    // Verify it has role="alert" for accessibility
+    const disclaimer = screen.getByRole("alert");
+    expect(disclaimer).toBeDefined();
+    expect(disclaimer.textContent).toContain("suggestions");
+  });
+
+  it("print button triggers window.print when clicked", async () => {
+    mockSuccessfulFetch();
     const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
 
-    // Simulate what the print button handler does
-    window.print();
+    const { default: DoctorPrepPage } = await import(
+      "@/app/reports/[id]/doctor-prep/page"
+    );
+    render(React.createElement(DoctorPrepPage));
 
+    await waitFor(() => {
+      expect(screen.getByText("Print Questions")).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("Print Questions"));
     expect(printSpy).toHaveBeenCalledTimes(1);
     printSpy.mockRestore();
   });
 
-  it("save feature uses sessionStorage for bookmarking", () => {
-    const key = "doctor-prep-saved-report-123";
-    const questions = [
-      { question: "Test Q", category: "clarifying", priority: "high" },
-    ];
+  it("save button bookmarks questions in sessionStorage", async () => {
+    mockSuccessfulFetch();
 
-    // Save
-    sessionStorage.setItem(key, JSON.stringify(questions));
-    expect(sessionStorage.getItem(key)).not.toBeNull();
+    const { default: DoctorPrepPage } = await import(
+      "@/app/reports/[id]/doctor-prep/page"
+    );
+    render(React.createElement(DoctorPrepPage));
 
-    const parsed = JSON.parse(sessionStorage.getItem(key)!);
-    expect(parsed).toHaveLength(1);
-    expect(parsed[0].question).toBe("Test Q");
+    await waitFor(() => {
+      expect(screen.getByText("Save for Later")).toBeDefined();
+    });
 
-    // Unsave
-    sessionStorage.removeItem(key);
-    expect(sessionStorage.getItem(key)).toBeNull();
+    // Click save
+    fireEvent.click(screen.getByText("Save for Later"));
+
+    // Button should change to "Saved"
+    expect(screen.getByText("Saved")).toBeDefined();
+
+    // sessionStorage should have the questions
+    const stored = sessionStorage.getItem("doctor-prep-saved-report-123");
+    expect(stored).not.toBeNull();
+    const parsed = JSON.parse(stored!);
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0].question).toBe("What does my glucose level mean?");
+
+    // Click unsave
+    fireEvent.click(screen.getByText("Saved"));
+    expect(screen.getByText("Save for Later")).toBeDefined();
+    expect(
+      sessionStorage.getItem("doctor-prep-saved-report-123")
+    ).toBeNull();
   });
 
-  it("disclaimer is visible in the rendered page", async () => {
-    // The disclaimer renders when the disclaimer state is set.
-    // We test the QuestionList + disclaimer pattern by verifying
-    // the disclaimer role="alert" pattern works.
-    const div = document.createElement("div");
-    div.setAttribute("role", "alert");
-    div.className = "doctor-prep__disclaimer";
-    div.textContent =
-      "These questions are suggestions to help guide your conversation with your doctor.";
-    document.body.appendChild(div);
+  it("renders questions from API in the page", async () => {
+    mockSuccessfulFetch();
 
-    const disclaimer = document.querySelector('[role="alert"]');
-    expect(disclaimer).not.toBeNull();
-    expect(disclaimer?.textContent).toContain("suggestions");
-    expect(disclaimer?.textContent).toContain("doctor");
+    const { default: DoctorPrepPage } = await import(
+      "@/app/reports/[id]/doctor-prep/page"
+    );
+    render(React.createElement(DoctorPrepPage));
 
-    document.body.removeChild(div);
+    await waitFor(() => {
+      expect(
+        screen.getByText("What does my glucose level mean?")
+      ).toBeDefined();
+    });
+
+    expect(screen.getByText("Should I change my diet?")).toBeDefined();
+    expect(screen.getByText("Clarifying Questions")).toBeDefined();
+    expect(screen.getByText("Lifestyle Questions")).toBeDefined();
+  });
+
+  it("shows loading state initially", async () => {
+    // Don't resolve fetch — keep it pending
+    mockFetch.mockReturnValue(new Promise(() => {}));
+
+    const { default: DoctorPrepPage } = await import(
+      "@/app/reports/[id]/doctor-prep/page"
+    );
+    render(React.createElement(DoctorPrepPage));
+
+    expect(
+      screen.getByText("Generating questions for your doctor visit...")
+    ).toBeDefined();
+    expect(screen.getByRole("status")).toBeDefined();
+  });
+
+  it("shows error state on fetch failure", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({ error: "Not found" }),
+    });
+
+    const { default: DoctorPrepPage } = await import(
+      "@/app/reports/[id]/doctor-prep/page"
+    );
+    render(React.createElement(DoctorPrepPage));
+
+    await waitFor(() => {
+      expect(screen.getByText("Report not found")).toBeDefined();
+    });
+
+    expect(screen.getByText("Try Again")).toBeDefined();
   });
 });
