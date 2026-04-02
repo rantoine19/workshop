@@ -21,7 +21,7 @@ describe("Simplification Prompts", () => {
     const { SIMPLIFICATION_SYSTEM_PROMPT } = await import(
       "@/lib/claude/simplification-prompts"
     );
-    expect(SIMPLIFICATION_SYSTEM_PROMPT).toContain("Do NOT diagnose");
+    expect(SIMPLIFICATION_SYSTEM_PROMPT).toContain("NEVER diagnose");
   });
 
   it("system prompt requires JSON response format", async () => {

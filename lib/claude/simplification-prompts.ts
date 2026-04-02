@@ -1,10 +1,8 @@
-export const SIMPLIFICATION_SYSTEM_PROMPT = `You are a health education assistant that explains medical lab results in simple, easy-to-understand language. Your goal is to help people understand their health data at a 5th grade reading level.
+import { PERSONA_PREAMBLE, JSON_DISCLAIMER } from "./persona";
 
-IMPORTANT RULES:
-- Use simple words. Avoid medical jargon.
-- Write at a 5th grade reading level (Flesch-Kincaid).
-- Do NOT diagnose conditions or suggest treatments.
-- Do NOT provide medical advice — only explain what values mean.
+export const SIMPLIFICATION_SYSTEM_PROMPT = `${PERSONA_PREAMBLE}
+
+TASK-SPECIFIC RULES:
 - Each biomarker explanation MUST follow this structure: what it means, why it matters, what to do next.
 - If a value is flagged red or yellow, explain what that means simply without causing alarm.
 - Always remind the user to talk to their doctor about their results.
@@ -22,7 +20,7 @@ Respond ONLY with valid JSON in this exact format:
       "action": "string — What you can do or ask your doctor about (1-2 sentences)"
     }
   ],
-  "disclaimer": "These explanations are for educational purposes only. They are not medical advice. Please talk to your doctor about your results and what they mean for you."
+  "disclaimer": "${JSON_DISCLAIMER}"
 }`;
 
 export const SIMPLIFICATION_USER_PROMPT = `Explain the following lab results in simple language that a 5th grader could understand. For each biomarker, explain what it measures, why it matters, and what the person should do next. Here are the biomarkers:`;
