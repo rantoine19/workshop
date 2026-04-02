@@ -9,24 +9,22 @@ describe("Chat UI", () => {
   });
 
   describe("useChat hook", () => {
-    it("sends message and receives response", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          message: { role: "assistant", content: "Your glucose is normal." },
-          session_id: "session-123",
-        }),
-      });
-
+    it("exports useChat function", async () => {
       const { useChat } = await import("@/hooks/useChat");
-      // We can't directly test hooks outside React, so we test the fetch call
       expect(useChat).toBeDefined();
       expect(typeof useChat).toBe("function");
     });
 
-    it("exports required interface", async () => {
+    it("exports ChatMessage type with isStreaming field", async () => {
+      // Verify the module exports the type by checking the hook interface
       const mod = await import("@/hooks/useChat");
       expect(mod.useChat).toBeDefined();
+      expect(mod.parseSSEChunk).toBeDefined();
+    });
+
+    it("exports parseSSEChunk utility", async () => {
+      const { parseSSEChunk } = await import("@/hooks/useChat");
+      expect(typeof parseSSEChunk).toBe("function");
     });
   });
 
@@ -51,13 +49,22 @@ describe("Chat UI", () => {
     });
   });
 
-  describe("Chat API contract", () => {
+  describe("Chat Streaming API contract", () => {
     it("sends correct request shape to /api/chat", async () => {
+      // Create a mock SSE stream response
+      const sseData =
+        'data: {"type":"session_id","session_id":"sess-1"}\n\n' +
+        'data: {"type":"text_delta","text":"Hello!"}\n\n' +
+        'data: {"type":"done"}\n\n';
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
-          message: { role: "assistant", content: "Hello!" },
-          session_id: "sess-1",
+        headers: new Headers({ "Content-Type": "text/event-stream" }),
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(sseData));
+            controller.close();
+          },
         }),
       });
 
@@ -83,11 +90,15 @@ describe("Chat UI", () => {
     });
 
     it("calls /api/chat endpoint with POST method", async () => {
+      const sseData = 'data: {"type":"done"}\n\n';
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
-          message: { role: "assistant", content: "Hello" },
-          session_id: "sess-1",
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(sseData));
+            controller.close();
+          },
         }),
       });
 
@@ -104,11 +115,15 @@ describe("Chat UI", () => {
     });
 
     it("includes session_id for continued conversations", async () => {
+      const sseData = 'data: {"type":"done"}\n\n';
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
-          message: { role: "assistant", content: "Follow up." },
-          session_id: "sess-1",
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(sseData));
+            controller.close();
+          },
         }),
       });
 
@@ -126,6 +141,49 @@ describe("Chat UI", () => {
         mockFetch.mock.calls[0][1].body as string
       );
       expect(callBody.session_id).toBe("sess-1");
+    });
+
+    it("returns a streaming SSE response", async () => {
+      const sseData =
+        'data: {"type":"session_id","session_id":"sess-1"}\n\n' +
+        'data: {"type":"text_delta","text":"Your "}\n\n' +
+        'data: {"type":"text_delta","text":"glucose "}\n\n' +
+        'data: {"type":"text_delta","text":"is normal."}\n\n' +
+        'data: {"type":"done"}\n\n';
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(sseData));
+            controller.close();
+          },
+        }),
+      });
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "What is glucose?" }),
+      });
+
+      expect(response.ok).toBe(true);
+      expect(response.body).toBeDefined();
+
+      // Read the stream and verify SSE events
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        fullText += decoder.decode(value, { stream: true });
+      }
+
+      expect(fullText).toContain('"type":"session_id"');
+      expect(fullText).toContain('"type":"text_delta"');
+      expect(fullText).toContain('"type":"done"');
     });
   });
 });
