@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -46,6 +47,15 @@ export async function GET(
   const parsedResultId = Array.isArray(parsedResults)
     ? parsedResults[0]?.id ?? null
     : parsedResults?.id ?? null;
+
+  // Audit log: report view (fire-and-forget)
+  logAuditEvent({
+    userId: user.id,
+    action: "report.view",
+    resourceType: "report",
+    resourceId: report.id,
+    ipAddress: getClientIp(request),
+  });
 
   return NextResponse.json(
     {

@@ -5,6 +5,7 @@ import {
   DOCTOR_QUESTIONS_USER_PROMPT,
   formatDataForDoctorQuestions,
 } from "@/lib/claude/doctor-prompts";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 const MAX_QUESTIONS = 10;
@@ -205,6 +206,15 @@ export async function POST(request: Request) {
         );
       }
     }
+
+    // Audit log: doctor questions generated (fire-and-forget)
+    logAuditEvent({
+      userId: user.id,
+      action: "doctor_questions.generate",
+      resourceType: "parsed_result",
+      resourceId: parsedResult.id,
+      ipAddress: getClientIp(request),
+    });
 
     return NextResponse.json(
       {

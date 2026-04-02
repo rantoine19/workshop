@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { parseReportWithClaude } from "@/lib/claude/parse-report";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -140,6 +141,15 @@ export async function POST(request: Request) {
       .from("reports")
       .update({ status: "parsed" })
       .eq("id", report.id);
+
+    // Audit log: report parse (fire-and-forget)
+    logAuditEvent({
+      userId: user.id,
+      action: "report.parse",
+      resourceType: "report",
+      resourceId: report.id,
+      ipAddress: getClientIp(request),
+    });
 
     return NextResponse.json(
       {

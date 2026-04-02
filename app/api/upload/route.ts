@@ -4,6 +4,7 @@ import {
   uploadToStorage,
   getFileType,
 } from "@/lib/supabase/storage";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -82,6 +83,15 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // Audit log: file upload (fire-and-forget)
+  logAuditEvent({
+    userId: user.id,
+    action: "report.upload",
+    resourceType: "report",
+    resourceId: report.id,
+    ipAddress: getClientIp(request),
+  });
 
   return NextResponse.json(
     { report_id: report.id, status: report.status },
