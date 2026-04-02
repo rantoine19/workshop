@@ -91,8 +91,8 @@ export default function ReportResultsPage() {
     return null;
   }
 
-  const isParsed = report.status === "completed" && report.parsed_result_id;
-  const isPending = report.status === "pending" || report.status === "processing";
+  const isParsed = report.status === "parsed" && report.parsed_result_id;
+  const isPending = report.status === "uploaded" || report.status === "parsing";
   const isFailed = report.status === "error";
 
   return (
@@ -109,11 +109,11 @@ export default function ReportResultsPage() {
           <span
             className={`report-results__status report-results__status--${report.status}`}
           >
-            {report.status === "completed"
+            {report.status === "parsed"
               ? "Analyzed"
-              : report.status === "processing"
+              : report.status === "parsing"
                 ? "Processing"
-                : report.status === "pending"
+                : report.status === "uploaded"
                   ? "Pending"
                   : "Error"}
           </span>

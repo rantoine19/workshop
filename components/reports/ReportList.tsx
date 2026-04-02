@@ -81,9 +81,9 @@ export default function ReportList() {
   }
 
   const statusLabel: Record<string, string> = {
-    completed: "Analyzed",
-    processing: "Processing",
-    pending: "Pending",
+    parsed: "Analyzed",
+    parsing: "Processing",
+    uploaded: "Pending",
     error: "Error",
   };
 
