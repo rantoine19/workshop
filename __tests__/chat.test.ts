@@ -31,9 +31,8 @@ describe("Chat API", () => {
     });
 
     it("prohibits diagnoses and treatment recommendations", () => {
-      expect(CHAT_SYSTEM_PROMPT).toContain(
-        "NEVER provide diagnoses or treatment recommendations"
-      );
+      expect(CHAT_SYSTEM_PROMPT).toContain("NEVER diagnose");
+      expect(CHAT_SYSTEM_PROMPT).toContain("NEVER provide medical advice");
     });
 
     it("instructs to redirect diagnosis requests to doctor", () => {
