@@ -30,6 +30,7 @@ export function BotAvatar() {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const isStreaming = message.isStreaming ?? false;
 
   return (
     <div
@@ -41,13 +42,18 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           {message.content.split("\n").map((line, i) => (
             <p key={i}>{line || "\u00A0"}</p>
           ))}
+          {isStreaming && (
+            <span className="streaming-cursor" aria-hidden="true" />
+          )}
         </div>
-        <span className="message-time">
-          {message.timestamp.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
+        {!isStreaming && (
+          <span className="message-time">
+            {message.timestamp.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        )}
       </div>
     </div>
   );

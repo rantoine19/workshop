@@ -588,6 +588,22 @@ button[type="submit"]:disabled {
   40% { transform: scale(1); opacity: 1; }
 }
 
+/* Streaming cursor */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--color-green-500);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 0.8s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 /* Chat input */
 .chat-input-form {
   display: flex;

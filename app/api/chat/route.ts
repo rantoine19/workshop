@@ -126,62 +126,6 @@ export async function POST(request: Request) {
     { role: "user" as const, content: userMessage },
   ];
 
-  // Call Claude
-  const claude = getClaudeClient();
-
-  let assistantContent: string;
-  try {
-    const response = await claude.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages,
-    });
-
-    const textBlock = response.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("No text response from Claude");
-    }
-
-    assistantContent = textBlock.text;
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Chat failed";
-    return NextResponse.json(
-      { error: `Chat failed: ${message}` },
-      { status: 500 }
-    );
-  }
-
-  // Persist both messages
-  const { error: insertError } = await supabase
-    .from("chat_messages")
-    .insert([
-      { session_id: sessionId, role: "user", content: userMessage },
-      { session_id: sessionId, role: "assistant", content: assistantContent },
-    ]);
-
-  if (insertError) {
-    // Still return the response even if persistence fails
-    // The user shouldn't lose the answer due to a DB issue
-    // Log to Sentry for ops visibility — NO PHI (no message content)
-    Sentry.captureException(
-      new Error(`Chat persistence failed: ${insertError.message}`),
-      {
-        tags: {
-          feature: "chat",
-          error_type: "persistence_failure",
-        },
-        extra: {
-          session_id: sessionId,
-          message_count: messages.length,
-          has_report_context: !!reportContext,
-          db_error_code: insertError.code,
-        },
-      }
-    );
-  }
-
   // Audit log: chat message (fire-and-forget)
   logAuditEvent({
     userId: user.id,
@@ -191,11 +135,84 @@ export async function POST(request: Request) {
     ipAddress: getClientIp(request),
   });
 
-  return NextResponse.json(
-    {
-      message: { role: "assistant", content: assistantContent },
-      session_id: sessionId,
+  // Stream Claude response via SSE
+  const claude = getClaudeClient();
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      let assistantContent = "";
+
+      try {
+        // Send session_id as the first SSE event so client knows it
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: "session_id", session_id: sessionId })}\n\n`)
+        );
+
+        const messageStream = claude.messages.stream({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages,
+        });
+
+        // Listen for text deltas
+        messageStream.on("text", (text) => {
+          assistantContent += text;
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "text_delta", text })}\n\n`)
+          );
+        });
+
+        // Wait for the stream to complete
+        await messageStream.finalMessage();
+
+        // Send done event
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+
+        // Persist both messages after stream completes
+        const { error: insertError } = await supabase
+          .from("chat_messages")
+          .insert([
+            { session_id: sessionId, role: "user", content: userMessage },
+            { session_id: sessionId, role: "assistant", content: assistantContent },
+          ]);
+
+        if (insertError) {
+          // Log to Sentry for ops visibility — NO PHI (no message content)
+          Sentry.captureException(
+            new Error(`Chat persistence failed: ${insertError.message}`),
+            {
+              tags: {
+                feature: "chat",
+                error_type: "persistence_failure",
+              },
+              extra: {
+                session_id: sessionId,
+                message_count: messages.length,
+                has_report_context: !!reportContext,
+                db_error_code: insertError.code,
+              },
+            }
+          );
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Chat failed";
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: "error", error: `Chat failed: ${message}` })}\n\n`)
+        );
+      } finally {
+        controller.close();
+      }
     },
-    { status: 200 }
-  );
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

@@ -3,13 +3,16 @@ import {
   CHAT_SYSTEM_PROMPT,
   buildReportContext,
 } from "@/lib/claude/chat-prompts";
+import { parseSSEChunk } from "@/hooks/useChat";
 
 // Mock Anthropic SDK
 const mockCreate = vi.fn();
+const mockStream = vi.fn();
 vi.mock("@anthropic-ai/sdk", () => ({
   default: vi.fn().mockImplementation(() => ({
     messages: {
       create: mockCreate,
+      stream: mockStream,
     },
   })),
 }));
@@ -149,7 +152,6 @@ describe("Chat API", () => {
     });
 
     it("rejects messages over 2000 characters with 400 status", async () => {
-      // Read the route file to verify the limit is enforced
       const fs = await import("fs");
       const path = await import("path");
       const routePath = path.resolve(
@@ -186,52 +188,70 @@ describe("Chat API", () => {
     });
   });
 
-  describe("Claude integration", () => {
-    it("returns assistant response from Claude", async () => {
-      mockCreate.mockResolvedValue({
-        content: [
-          {
-            type: "text",
-            text: "Your glucose level is 95, which is in the normal range. This means your body is handling sugar well.\n\n⚠️ This is not medical advice. Consult your healthcare provider.",
-          },
-        ],
-      });
-
-      const { getClaudeClient } = await import("@/lib/claude/client");
-      const client = getClaudeClient();
-      const response = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1024,
-        system: CHAT_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: "What does my glucose level mean?" }],
-      });
-
-      const textBlock = response.content.find(
-        (b: { type: string }) => b.type === "text"
+  describe("Claude streaming integration", () => {
+    it("uses claude.messages.stream() for streaming", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
       );
-      expect(textBlock).toBeDefined();
-      if (textBlock && textBlock.type === "text") {
-        expect(textBlock.text).toContain("glucose");
-        expect(textBlock.text).toContain(
-          "This is not medical advice"
-        );
-      }
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      expect(source).toContain("claude.messages.stream(");
     });
 
-    it("handles Claude API errors gracefully", async () => {
-      mockCreate.mockRejectedValue(new Error("API rate limit exceeded"));
+    it("returns SSE content-type header", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
 
-      const { getClaudeClient } = await import("@/lib/claude/client");
-      const client = getClaudeClient();
+      expect(source).toContain("text/event-stream");
+    });
 
-      await expect(
-        client.messages.create({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1024,
-          system: CHAT_SYSTEM_PROMPT,
-          messages: [{ role: "user", content: "Hello" }],
-        })
-      ).rejects.toThrow("API rate limit exceeded");
+    it("sends session_id, text_delta, and done events", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      expect(source).toContain('type: "session_id"');
+      expect(source).toContain('type: "text_delta"');
+      expect(source).toContain('type: "done"');
+    });
+
+    it("sends error events on failure", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      expect(source).toContain('type: "error"');
+    });
+
+    it("persists messages after stream completes", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      // Persistence happens after finalMessage()
+      expect(source).toContain("await messageStream.finalMessage()");
+      expect(source).toContain('role: "user", content: userMessage');
+      expect(source).toContain('role: "assistant", content: assistantContent');
     });
   });
 
@@ -296,5 +316,75 @@ describe("Chat API", () => {
       expect(source).toContain('feature: "chat"');
       expect(source).toContain('error_type: "persistence_failure"');
     });
+  });
+});
+
+describe("SSE parsing (parseSSEChunk)", () => {
+  it("parses a single complete SSE event", () => {
+    const chunk = 'data: {"type":"text_delta","text":"Hello"}\n\n';
+    const { events, remaining } = parseSSEChunk(chunk, "");
+
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("text_delta");
+    expect(events[0].text).toBe("Hello");
+    expect(remaining).toBe("");
+  });
+
+  it("parses multiple SSE events in a single chunk", () => {
+    const chunk =
+      'data: {"type":"session_id","session_id":"sess-1"}\n\n' +
+      'data: {"type":"text_delta","text":"Hi"}\n\n';
+    const { events, remaining } = parseSSEChunk(chunk, "");
+
+    expect(events).toHaveLength(2);
+    expect(events[0].type).toBe("session_id");
+    expect(events[1].type).toBe("text_delta");
+    expect(remaining).toBe("");
+  });
+
+  it("handles partial chunks across calls", () => {
+    const chunk1 = 'data: {"type":"text_del';
+    const { events: events1, remaining: rem1 } = parseSSEChunk(chunk1, "");
+    expect(events1).toHaveLength(0);
+    expect(rem1).toBe('data: {"type":"text_del');
+
+    const chunk2 = 'ta","text":"Hi"}\n\n';
+    const { events: events2, remaining: rem2 } = parseSSEChunk(chunk2, rem1);
+    expect(events2).toHaveLength(1);
+    expect(events2[0].text).toBe("Hi");
+    expect(rem2).toBe("");
+  });
+
+  it("parses done events", () => {
+    const chunk = 'data: {"type":"done"}\n\n';
+    const { events } = parseSSEChunk(chunk, "");
+
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("done");
+  });
+
+  it("parses error events", () => {
+    const chunk = 'data: {"type":"error","error":"Chat failed: timeout"}\n\n';
+    const { events } = parseSSEChunk(chunk, "");
+
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("error");
+    expect(events[0].error).toBe("Chat failed: timeout");
+  });
+
+  it("skips malformed JSON lines", () => {
+    const chunk = 'data: not-json\n\ndata: {"type":"done"}\n\n';
+    const { events } = parseSSEChunk(chunk, "");
+
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("done");
+  });
+
+  it("skips empty lines and non-data lines", () => {
+    const chunk = '\n\n: comment\ndata: {"type":"done"}\n\n';
+    const { events } = parseSSEChunk(chunk, "");
+
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe("done");
   });
 });
