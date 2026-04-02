@@ -391,11 +391,13 @@ button[type="submit"]:disabled {
   color: #999;
 }
 
-/* Message bubbles */
+/* Message bubbles — iMessage-style */
 .message-bubble-row {
   display: flex;
-  margin-bottom: 0.5rem;
-  padding: 0 0.25rem;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0 0.5rem;
 }
 
 .message-user {
@@ -406,23 +408,41 @@ button[type="submit"]:disabled {
   justify-content: flex-start;
 }
 
+/* Bot avatar — medical robot mascot */
+.bot-avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #ecfccb;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bot-avatar svg {
+  width: 100%;
+  height: 100%;
+}
+
 .message-bubble {
-  max-width: 80%;
-  padding: 0.6rem 0.85rem;
-  border-radius: 12px;
+  max-width: 75%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 18px;
   position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .bubble-user {
-  background: #0066cc;
+  background: #65a30d;
   color: white;
   border-bottom-right-radius: 4px;
 }
 
 .bubble-assistant {
-  background: #f0f0f0;
-  color: #1a1a1a;
+  background: #f1f5f9;
+  color: #1e293b;
   border-bottom-left-radius: 4px;
+  border: 1px solid #e2e8f0;
 }
 
 .message-content p {
@@ -435,11 +455,15 @@ button[type="submit"]:disabled {
   margin-bottom: 0;
 }
 
+.bubble-user .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .message-time {
   display: block;
-  font-size: 0.7rem;
-  opacity: 0.6;
-  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  color: #94a3b8;
+  margin-top: 0.3rem;
   text-align: right;
 }
 
@@ -453,7 +477,7 @@ button[type="submit"]:disabled {
 .typing-indicator span {
   width: 8px;
   height: 8px;
-  background: #999;
+  background: #65a30d;
   border-radius: 50%;
   animation: typing-bounce 1.4s infinite ease-in-out;
 }
