@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useChat } from "@/hooks/useChat";
-import { MessageBubble } from "./MessageBubble";
+import { MessageBubble, BotAvatar } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import NavHeader from "@/components/ui/NavHeader";
 
@@ -53,6 +53,7 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
 
         {isLoading && (
           <div className="message-bubble-row message-assistant">
+            <BotAvatar />
             <div className="message-bubble bubble-assistant">
               <div className="typing-indicator" aria-label="AI is typing">
                 <span></span>
