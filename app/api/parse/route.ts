@@ -113,6 +113,7 @@ export async function POST(request: Request) {
       .single();
 
     if (insertError || !parsedResult) {
+      console.error("[PARSE] Failed to store parsed results. insertError:", insertError?.message ?? "none", "parsedResult:", parsedResult);
       await supabase
         .from("reports")
         .update({ status: "error" })
@@ -122,6 +123,7 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+    console.log("[PARSE] Stored parsed_result:", parsedResult.id);
 
     // Create risk flags for each biomarker
     const riskFlags = parsed.biomarkers
