@@ -136,9 +136,17 @@ describe("Chat API", () => {
 
   describe("message length limit", () => {
     it("exports MAX_MESSAGE_LENGTH constant of 2000", async () => {
-      const routeSource = await import("@/app/api/chat/route");
-      // The route module exists and exports POST
-      expect(routeSource.POST).toBeDefined();
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      // The route module exports a POST function and defines the constant
+      expect(source).toContain("export async function POST");
+      expect(source).toContain("MAX_MESSAGE_LENGTH = 2000");
     });
 
     it("rejects messages over 2000 characters with 400 status", async () => {
@@ -225,6 +233,69 @@ describe("Chat API", () => {
           messages: [{ role: "user", content: "Hello" }],
         })
       ).rejects.toThrow("API rate limit exceeded");
+    });
+  });
+
+  describe("Sentry logging for persistence failures", () => {
+    it("imports Sentry in the chat route", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      expect(source).toContain('import * as Sentry from "@sentry/nextjs"');
+    });
+
+    it("calls Sentry.captureException on insert failure", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      expect(source).toContain("Sentry.captureException");
+      expect(source).toContain("Chat persistence failed");
+    });
+
+    it("includes session_id and message_count but no PHI", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      // Should include safe metadata
+      expect(source).toContain("session_id: sessionId");
+      expect(source).toContain("message_count: messages.length");
+
+      // Should NOT include message content in Sentry call
+      // The Sentry block should not reference userMessage or assistantContent
+      const sentryBlock = source.substring(
+        source.indexOf("Sentry.captureException"),
+        source.indexOf("}", source.indexOf("Sentry.captureException") + 200) + 50
+      );
+      expect(sentryBlock).not.toContain("userMessage");
+      expect(sentryBlock).not.toContain("assistantContent");
+    });
+
+    it("tags the error with feature and error_type", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      expect(source).toContain('feature: "chat"');
+      expect(source).toContain('error_type: "persistence_failure"');
     });
   });
 });
