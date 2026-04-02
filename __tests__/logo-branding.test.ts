@@ -109,6 +109,7 @@ describe("Auth Pages — Logo", () => {
 
     vi.doMock("next/navigation", () => ({
       useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+      usePathname: () => "/",
     }));
   });
 

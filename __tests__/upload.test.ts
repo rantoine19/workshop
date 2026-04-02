@@ -122,6 +122,7 @@ describe("Upload Page — auto-parse flow", () => {
 
     vi.doMock("next/navigation", () => ({
       useRouter: () => ({ push: mockPush }),
+      usePathname: () => "/upload",
     }));
 
     vi.doMock("@/lib/supabase/client", () => ({
