@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getClaudeClient } from "@/lib/claude/client";
 import { CHAT_SYSTEM_PROMPT, buildReportContext } from "@/lib/claude/chat-prompts";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 const MAX_HISTORY_MESSAGES = 20;
@@ -153,6 +154,15 @@ export async function POST(request: Request) {
     // Still return the response even if persistence fails
     // The user shouldn't lose the answer due to a DB issue
   }
+
+  // Audit log: chat message (fire-and-forget)
+  logAuditEvent({
+    userId: user.id,
+    action: "chat.message",
+    resourceType: "chat_session",
+    resourceId: sessionId,
+    ipAddress: getClientIp(request),
+  });
 
   return NextResponse.json(
     {

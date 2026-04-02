@@ -16,7 +16,7 @@ export async function GET() {
   // Fetch user's reports (RLS enforces ownership)
   const { data: reports, error } = await supabase
     .from("reports")
-    .select("id, file_name, file_type, status, created_at")
+    .select("id, original_filename, file_type, status, created_at")
     .order("created_at", { ascending: false })
     .limit(20);
 
@@ -27,5 +27,14 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ reports: reports ?? [] }, { status: 200 });
+  // Map original_filename → file_name for UI compatibility
+  const mapped = (reports ?? []).map((r) => ({
+    id: r.id,
+    file_name: r.original_filename,
+    file_type: r.file_type,
+    status: r.status,
+    created_at: r.created_at,
+  }));
+
+  return NextResponse.json({ reports: mapped }, { status: 200 });
 }

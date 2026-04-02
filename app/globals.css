@@ -500,7 +500,7 @@ button[type="submit"]:disabled {
   box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.15);
 }
 
-.chat-send-button {
+button.chat-send-button[type="submit"] {
   width: auto;
   flex-shrink: 0;
   padding: 0.6rem 1.2rem;
@@ -515,11 +515,11 @@ button[type="submit"]:disabled {
   align-self: flex-end;
 }
 
-.chat-send-button:hover {
+button.chat-send-button[type="submit"]:hover {
   background: #0052a3;
 }
 
-.chat-send-button:disabled {
+button.chat-send-button[type="submit"]:disabled {
   background: #99c2e6;
   cursor: not-allowed;
 }
