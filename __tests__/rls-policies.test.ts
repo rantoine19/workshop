@@ -118,3 +118,53 @@ describe("Audit Logs RLS Migration", () => {
     expect(auditSql).not.toContain("FOR DELETE");
   });
 });
+
+// ── Storage Bucket Migration ──────────────────────────────────────────
+
+describe("Storage Bucket Migration", () => {
+  const storageMigrationPath = resolve(
+    __dirname,
+    "../supabase/migrations/005_storage_bucket.sql"
+  );
+  const storageSql = readFileSync(storageMigrationPath, "utf-8");
+
+  it("creates the medical-reports bucket", () => {
+    expect(storageSql).toContain("'medical-reports'");
+    expect(storageSql).toContain("storage.buckets");
+  });
+
+  it("sets bucket as private (not public)", () => {
+    expect(storageSql).toContain("false");
+    expect(storageSql).not.toMatch(/public,\s*true/i);
+  });
+
+  it("enforces 10MB file size limit", () => {
+    expect(storageSql).toContain("10485760");
+  });
+
+  it("allows only PDF, PNG, and JPEG mime types", () => {
+    expect(storageSql).toContain("application/pdf");
+    expect(storageSql).toContain("image/png");
+    expect(storageSql).toContain("image/jpeg");
+  });
+
+  it("creates INSERT policy scoped to user folder", () => {
+    expect(storageSql).toContain("FOR INSERT");
+    expect(storageSql).toContain("auth.uid()::text");
+    expect(storageSql).toContain("storage.foldername");
+  });
+
+  it("creates SELECT policy for users to read own files", () => {
+    expect(storageSql).toContain("FOR SELECT");
+    expect(storageSql).toContain("bucket_id = 'medical-reports'");
+  });
+
+  it("creates DELETE policy for users to remove own files", () => {
+    expect(storageSql).toContain("FOR DELETE");
+  });
+
+  it("all policies require authenticated role", () => {
+    const authCount = (storageSql.match(/TO authenticated/g) || []).length;
+    expect(authCount).toBeGreaterThanOrEqual(3);
+  });
+});

@@ -56,8 +56,9 @@ export async function POST(request: Request) {
   );
 
   if (uploadError) {
+    console.error("[UPLOAD] Storage upload failed:", uploadError);
     return NextResponse.json(
-      { error: "Upload failed" },
+      { error: `Upload failed: ${uploadError}` },
       { status: 500 }
     );
   }
