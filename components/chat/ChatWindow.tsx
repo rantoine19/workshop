@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useChat } from "@/hooks/useChat";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
+import NavHeader from "@/components/ui/NavHeader";
 
 interface ChatWindowProps {
   reportId?: string;
@@ -20,6 +21,7 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
 
   return (
     <div className="chat-window">
+      <NavHeader backLabel="Dashboard" />
       <div className="chat-disclaimer">
         This AI helps you understand your health data in simple language. It
         does not provide medical advice, diagnoses, or treatment

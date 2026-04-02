@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import Link from "next/link";
+import NavHeader from "@/components/ui/NavHeader";
 
 const ALLOWED_EXTENSIONS = ".pdf,.png,.jpg,.jpeg";
 const MAX_SIZE_MB = 10;
@@ -154,9 +155,7 @@ export default function UploadPage() {
 
   return (
     <div className="upload-container">
-      <Link href="/dashboard" className="upload-back">
-        Back to Dashboard
-      </Link>
+      <NavHeader backLabel="Dashboard" />
       <h1>Upload Medical Report</h1>
       <p>
         Upload your lab results or medical reports. We accept PDF, PNG, and JPG

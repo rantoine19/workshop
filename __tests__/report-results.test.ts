@@ -122,7 +122,8 @@ describe("Report Results Page", () => {
     // Navigation links
     expect(screen.getByText("Prepare for Doctor Visit")).toBeDefined();
     expect(screen.getByText("Chat About Results")).toBeDefined();
-    expect(screen.getByText("Back to Dashboard")).toBeDefined();
+    // NavHeader provides navigation
+    expect(screen.getByText("Dashboard")).toBeDefined();
   });
 
   it("shows pending state for reports still processing", async () => {

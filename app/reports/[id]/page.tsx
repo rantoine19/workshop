@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import HealthSummary from "@/components/reports/HealthSummary";
 import RiskDashboard from "@/components/reports/RiskDashboard";
+import NavHeader from "@/components/ui/NavHeader";
 
 interface ReportData {
   id: string;
@@ -97,9 +98,7 @@ export default function ReportResultsPage() {
   return (
     <div className="report-results">
       <div className="report-results__header">
-        <Link href="/dashboard" className="report-results__back">
-          Back to Dashboard
-        </Link>
+        <NavHeader backLabel="Dashboard" />
         <h1>{report.file_name}</h1>
         <p className="report-results__meta">
           Uploaded {new Date(report.created_at).toLocaleDateString("en-US", {

@@ -259,6 +259,10 @@ describe("Upload Page — auto-parse flow", () => {
     const { default: UploadPage } = await import("@/app/upload/page");
     render(React.createElement(UploadPage));
 
-    expect(screen.getByText("Back to Dashboard")).toBeDefined();
+    // NavHeader provides navigation — check for "Dashboard" link
+    expect(screen.getByText("Dashboard")).toBeDefined();
+    // NavHeader also provides Upload, Chat, Profile links
+    expect(screen.getByText("Upload")).toBeDefined();
+    expect(screen.getByText("Chat")).toBeDefined();
   });
 });

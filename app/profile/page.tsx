@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import NavHeader from "@/components/ui/NavHeader";
 
 interface ProfileData {
   id: string;
@@ -88,9 +89,7 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <div className="profile-page__header">
-        <Link href="/dashboard" className="profile-page__back">
-          Back to Dashboard
-        </Link>
+        <NavHeader backLabel="Dashboard" />
         <h1>Your Profile</h1>
         <p>Manage your personal information. This helps us personalize your health explanations.</p>
       </div>
