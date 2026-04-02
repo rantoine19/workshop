@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Logo from "@/components/ui/Logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -34,6 +35,9 @@ export default function LoginPage() {
 
   return (
     <div className="auth-container">
+      <div className="auth-logo">
+        <Logo variant="full" size="lg" />
+      </div>
       <h1>Welcome Back</h1>
       <p>Log in to chat with your health data.</p>
 
