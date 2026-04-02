@@ -62,12 +62,14 @@ export async function POST(request: Request) {
     .eq("id", report.id);
 
   try {
+    console.log("[PARSE] Starting parse for report:", report.id, "file_path:", report.file_path, "file_type:", report.file_type);
     // Download file from Supabase Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("medical-reports")
       .download(report.file_path);
 
     if (downloadError || !fileData) {
+      console.error("[PARSE] Download failed:", downloadError?.message);
       await supabase
         .from("reports")
         .update({ status: "error" })
@@ -91,11 +93,13 @@ export async function POST(request: Request) {
           : "image/jpeg";
 
     // Parse with Claude Vision
+    console.log("[PARSE] File downloaded, size:", arrayBuffer.byteLength, "bytes. Sending to Claude Vision...");
     const parsed = await parseReportWithClaude(
       base64,
       mediaType as "application/pdf" | "image/png" | "image/jpeg"
     );
 
+    console.log("[PARSE] Claude returned", parsed.biomarkers.length, "biomarkers. Storing results...");
     // Store parsed results
     const { data: parsedResult, error: insertError } = await supabase
       .from("parsed_results")
@@ -169,6 +173,10 @@ export async function POST(request: Request) {
 
     const message =
       error instanceof Error ? error.message : "Parsing failed";
+    console.error("[PARSE] Error:", message);
+    if (error instanceof Error && error.stack) {
+      console.error("[PARSE] Stack:", error.stack);
+    }
     return NextResponse.json(
       { error: `Parsing failed: ${message}` },
       { status: 500 }
