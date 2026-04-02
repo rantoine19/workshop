@@ -52,10 +52,18 @@ CREATE INDEX idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 
 -- =============================================================================
--- RLS: Deny all user access (admin-only via service role)
+-- RLS: Write-only for authenticated users, read via service role only
 -- =============================================================================
 
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
--- No user-facing policies — only service_role can read/write.
--- This ensures users cannot view or tamper with audit logs.
+-- Authenticated users can INSERT audit entries for their own user_id.
+-- This allows the anon-key Supabase client to write audit logs.
+CREATE POLICY "Users can insert own audit logs"
+  ON audit_logs
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+-- No SELECT/UPDATE/DELETE policies — users cannot read or tamper with logs.
+-- Only service_role (admin) can query audit logs for compliance reporting.

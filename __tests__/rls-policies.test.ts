@@ -83,3 +83,38 @@ describe("RLS Policies Migration", () => {
     expect(profileSection).not.toContain("user_id");
   });
 });
+
+// ── Audit Logs RLS ──────────────────────────────────────────────────
+
+describe("Audit Logs RLS Migration", () => {
+  const auditMigrationPath = resolve(
+    __dirname,
+    "../supabase/migrations/004_audit_log.sql"
+  );
+  const auditSql = readFileSync(auditMigrationPath, "utf-8");
+
+  it("enables RLS on audit_logs table", () => {
+    expect(auditSql).toContain(
+      "ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY"
+    );
+  });
+
+  it("allows authenticated users to INSERT their own audit logs", () => {
+    expect(auditSql).toContain("ON audit_logs");
+    expect(auditSql).toContain("FOR INSERT");
+    expect(auditSql).toContain("TO authenticated");
+    expect(auditSql).toContain("auth.uid() = user_id");
+  });
+
+  it("does NOT allow SELECT for regular users — admin-only reads", () => {
+    expect(auditSql).not.toContain("FOR SELECT");
+  });
+
+  it("does NOT allow UPDATE for regular users — audit logs are immutable", () => {
+    expect(auditSql).not.toContain("FOR UPDATE");
+  });
+
+  it("does NOT allow DELETE for regular users — audit logs cannot be tampered", () => {
+    expect(auditSql).not.toContain("FOR DELETE");
+  });
+});
