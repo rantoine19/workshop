@@ -25,7 +25,7 @@ export async function GET(
   const { data: report, error: reportError } = await supabase
     .from("reports")
     .select(
-      "id, user_id, file_name, file_type, status, created_at, parsed_results(id)"
+      "id, user_id, original_filename, file_type, status, created_at, parsed_results(id)"
     )
     .eq("id", reportId)
     .single();
@@ -61,7 +61,7 @@ export async function GET(
     {
       report: {
         id: report.id,
-        file_name: report.file_name,
+        file_name: report.original_filename,
         file_type: report.file_type,
         status: report.status,
         created_at: report.created_at,
