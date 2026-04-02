@@ -39,6 +39,22 @@ describe("Chat API", () => {
     it("instructs to redirect diagnosis requests to doctor", () => {
       expect(CHAT_SYSTEM_PROMPT).toContain("please talk to your doctor");
     });
+
+    it("requires short conversational responses", () => {
+      expect(CHAT_SYSTEM_PROMPT).toContain("2-3 sentences max");
+    });
+
+    it("requires follow-up questions to keep conversation going", () => {
+      expect(CHAT_SYSTEM_PROMPT).toContain("follow-up question");
+    });
+
+    it("instructs to focus on one topic per message", () => {
+      expect(CHAT_SYSTEM_PROMPT).toContain("ONE topic or ONE biomarker per message");
+    });
+
+    it("prohibits dumping all results at once", () => {
+      expect(CHAT_SYSTEM_PROMPT).toContain("Do NOT dump all results at once");
+    });
   });
 
   describe("buildReportContext", () => {
