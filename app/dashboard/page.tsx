@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 import ReportList from "@/components/reports/ReportList";
+import Logo from "@/components/ui/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function DashboardPage() {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1>HealthChat AI</h1>
+        <Logo variant="full" size="md" />
         <LogoutButton />
       </header>
 

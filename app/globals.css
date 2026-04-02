@@ -42,6 +42,17 @@ code {
   font-size: 0.9em;
 }
 
+/* Logo */
+.logo-link {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
 /* Auth pages */
 .auth-container {
   max-width: 400px;
