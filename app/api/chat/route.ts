@@ -5,6 +5,7 @@ import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 const MAX_HISTORY_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 2000;
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -37,6 +38,15 @@ export async function POST(request: Request) {
   }
 
   const userMessage = body.message.trim();
+
+  if (userMessage.length > MAX_MESSAGE_LENGTH) {
+    return NextResponse.json(
+      {
+        error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters.`,
+      },
+      { status: 400 }
+    );
+  }
 
   // Create or load chat session
   let sessionId = body.session_id;

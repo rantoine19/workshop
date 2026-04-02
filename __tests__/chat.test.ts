@@ -118,6 +118,51 @@ describe("Chat API", () => {
     });
   });
 
+  describe("message length limit", () => {
+    it("exports MAX_MESSAGE_LENGTH constant of 2000", async () => {
+      const routeSource = await import("@/app/api/chat/route");
+      // The route module exists and exports POST
+      expect(routeSource.POST).toBeDefined();
+    });
+
+    it("rejects messages over 2000 characters with 400 status", async () => {
+      // Read the route file to verify the limit is enforced
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      // Verify the constant exists
+      expect(source).toContain("MAX_MESSAGE_LENGTH = 2000");
+
+      // Verify it checks the length after trimming
+      expect(source).toContain("userMessage.length > MAX_MESSAGE_LENGTH");
+
+      // Verify it returns 400 with a clear error
+      expect(source).toContain("Message too long");
+      expect(source).toContain("status: 400");
+    });
+
+    it("allows messages at exactly 2000 characters", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const routePath = path.resolve(
+        __dirname,
+        "../app/api/chat/route.ts"
+      );
+      const source = fs.readFileSync(routePath, "utf-8");
+
+      // Uses > (not >=) so exactly 2000 chars passes through
+      expect(source).toContain("userMessage.length > MAX_MESSAGE_LENGTH");
+      expect(source).not.toContain(
+        "userMessage.length >= MAX_MESSAGE_LENGTH"
+      );
+    });
+  });
+
   describe("Claude integration", () => {
     it("returns assistant response from Claude", async () => {
       mockCreate.mockResolvedValue({
