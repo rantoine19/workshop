@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { parseReportWithClaude } from "@/lib/claude/parse-report";
+import { applyServerSideFlags } from "@/lib/health/flag-biomarker";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
@@ -99,14 +100,22 @@ export async function POST(request: Request) {
       mediaType as "application/pdf" | "image/png" | "image/jpeg"
     );
 
-    console.log("[PARSE] Claude returned", parsed.biomarkers.length, "biomarkers. Storing results...");
+    console.log("[PARSE] Claude returned", parsed.biomarkers.length, "biomarkers. Applying server-side risk flags...");
+
+    // Apply deterministic server-side flagging (fixes #87)
+    // This overrides Claude's advisory flags with verified reference ranges.
+    // Claude's flag is kept as fallback only for unrecognized biomarkers.
+    const reflaggedBiomarkers = applyServerSideFlags(parsed.biomarkers);
+    const reflaggedParsed = { ...parsed, biomarkers: reflaggedBiomarkers };
+
+    console.log("[PARSE] Server-side flags applied. Storing results...");
     // Store parsed results
     const { data: parsedResult, error: insertError } = await supabase
       .from("parsed_results")
       .insert({
         report_id: report.id,
-        raw_extraction: parsed,
-        biomarkers: parsed.biomarkers,
+        raw_extraction: reflaggedParsed,
+        biomarkers: reflaggedBiomarkers,
         summary_plain: parsed.summary,
       })
       .select("id")
@@ -125,8 +134,8 @@ export async function POST(request: Request) {
     }
     console.log("[PARSE] Stored parsed_result:", parsedResult.id);
 
-    // Create risk flags for each biomarker
-    const riskFlags = parsed.biomarkers
+    // Create risk flags for each biomarker (using server-side flags)
+    const riskFlags = reflaggedBiomarkers
       .filter((b) => b.flag && b.value != null)
       .map((b) => ({
         parsed_result_id: parsedResult.id,
