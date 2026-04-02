@@ -210,6 +210,7 @@ describe("Doctor Prep Page — rendered", () => {
     // Mock next/navigation useParams
     vi.doMock("next/navigation", () => ({
       useParams: () => ({ id: "report-123" }),
+      usePathname: () => "/reports/report-123/doctor-prep",
     }));
   });
 

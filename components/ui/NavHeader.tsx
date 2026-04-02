@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 
 interface NavHeaderProps {
@@ -14,6 +15,13 @@ export default function NavHeader({
   backHref = "/dashboard",
   backLabel = "Dashboard",
 }: NavHeaderProps) {
+  const pathname = usePathname();
+
+  const linkClass = (href: string) => {
+    const isActive = pathname === href || pathname.startsWith(href + "/");
+    return `nav-header__link${isActive ? " nav-header__link--active" : ""}`;
+  };
+
   return (
     <header className="nav-header">
       <div className="nav-header__left">
@@ -25,13 +33,13 @@ export default function NavHeader({
         )}
       </div>
       <nav className="nav-header__links">
-        <Link href="/upload" className="nav-header__link">
+        <Link href="/upload" className={linkClass("/upload")}>
           Upload
         </Link>
-        <Link href="/chat" className="nav-header__link">
+        <Link href="/chat" className={linkClass("/chat")}>
           Chat
         </Link>
-        <Link href="/profile" className="nav-header__link">
+        <Link href="/profile" className={linkClass("/profile")}>
           Profile
         </Link>
       </nav>
