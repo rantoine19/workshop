@@ -9,6 +9,20 @@
 import { REFERENCE_RANGES, type RiskFlag, type ReferenceRange } from "./reference-ranges";
 
 /**
+ * Measurements that should NOT be flagged as risk indicators.
+ * These are raw data points used for calculations (BMI, etc.)
+ * but have no inherent "healthy" or "unhealthy" range on their own.
+ */
+const SKIP_FLAG_NAMES = [
+  "height",
+  "weight",
+  "waist",
+  "waist circumference",
+  "hip",
+  "hip circumference",
+];
+
+/**
  * Normalize a biomarker name for matching:
  * - lowercase
  * - strip parentheses content
@@ -178,6 +192,12 @@ export function flagBiomarker(
   value: number,
   gender?: "male" | "female"
 ): RiskFlag | null {
+  // Skip measurements that aren't risk indicators on their own
+  const normalized = normalizeName(name);
+  if (SKIP_FLAG_NAMES.some((skip) => normalized === skip)) {
+    return "green";
+  }
+
   const range = findMatchingRange(name, gender);
 
   if (!range) {
