@@ -3,6 +3,7 @@ import { getClaudeClient } from "@/lib/claude/client";
 import { CHAT_SYSTEM_PROMPT, buildReportContext } from "@/lib/claude/chat-prompts";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 const MAX_HISTORY_MESSAGES = 20;
 const MAX_MESSAGE_LENGTH = 2000;
@@ -163,6 +164,22 @@ export async function POST(request: Request) {
   if (insertError) {
     // Still return the response even if persistence fails
     // The user shouldn't lose the answer due to a DB issue
+    // Log to Sentry for ops visibility — NO PHI (no message content)
+    Sentry.captureException(
+      new Error(`Chat persistence failed: ${insertError.message}`),
+      {
+        tags: {
+          feature: "chat",
+          error_type: "persistence_failure",
+        },
+        extra: {
+          session_id: sessionId,
+          message_count: messages.length,
+          has_report_context: !!reportContext,
+          db_error_code: insertError.code,
+        },
+      }
+    );
   }
 
   // Audit log: chat message (fire-and-forget)
