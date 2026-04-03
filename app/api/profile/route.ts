@@ -15,7 +15,7 @@ export async function GET() {
   // Fetch profile — RLS ensures only own profile is accessible
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, display_name, date_of_birth, gender, updated_at")
+    .select("id, display_name, date_of_birth, gender, avatar_url, updated_at")
     .eq("id", user.id)
     .single();
 
@@ -34,6 +34,7 @@ export async function GET() {
         display_name: null,
         date_of_birth: null,
         gender: null,
+        avatar_url: null,
         updated_at: null,
       },
     },
@@ -139,7 +140,7 @@ export async function PUT(request: Request) {
   const { data: profile, error } = await supabase
     .from("profiles")
     .upsert(updateData, { onConflict: "id" })
-    .select("id, display_name, date_of_birth, gender, updated_at")
+    .select("id, display_name, date_of_birth, gender, avatar_url, updated_at")
     .single();
 
   if (error) {

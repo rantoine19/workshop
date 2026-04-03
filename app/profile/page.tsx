@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { useState, useEffect, useCallback, useRef } from "react";
 import NavHeader from "@/components/ui/NavHeader";
+import Avatar from "@/components/ui/Avatar";
 
 interface ProfileData {
   id: string;
   display_name: string | null;
   date_of_birth: string | null;
   gender: string | null;
+  avatar_url: string | null;
   updated_at: string | null;
 }
 
@@ -17,10 +18,13 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -33,6 +37,7 @@ export default function ProfilePage() {
       setDisplayName(data.profile.display_name || "");
       setDateOfBirth(data.profile.date_of_birth || "");
       setGender(data.profile.gender || "");
+      setAvatarUrl(data.profile.avatar_url || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
@@ -43,6 +48,77 @@ export default function ProfilePage() {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Client-side validation
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Invalid file type. Accepted: PNG, JPEG, WebP");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("File too large. Maximum size is 2MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to upload avatar");
+      }
+
+      const data = await response.json();
+      setAvatarUrl(data.avatar_url);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setUploadingAvatar(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/profile/avatar", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to remove avatar");
+      }
+
+      setAvatarUrl(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove avatar");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +181,40 @@ export default function ProfilePage() {
           Profile saved successfully!
         </div>
       )}
+
+      <div className="profile-avatar">
+        <Avatar avatarUrl={avatarUrl} displayName={displayName} size="lg" />
+        <div className="profile-avatar__actions">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleAvatarUpload}
+            className="profile-avatar__input"
+            id="avatar-upload"
+            aria-label="Upload avatar"
+          />
+          <label
+            htmlFor="avatar-upload"
+            className="profile-avatar__upload-btn"
+          >
+            {uploadingAvatar ? "Uploading..." : "Change Photo"}
+          </label>
+          {avatarUrl && (
+            <button
+              type="button"
+              onClick={handleAvatarRemove}
+              className="profile-avatar__remove-btn"
+              disabled={uploadingAvatar}
+            >
+              Remove
+            </button>
+          )}
+          <span className="profile-avatar__hint">
+            PNG, JPEG, or WebP. Max 2MB.
+          </span>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="profile-page__form">
         <div className="profile-page__field">
