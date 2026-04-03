@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { parseReportWithClaude } from "@/lib/claude/parse-report";
 import { applyServerSideFlags } from "@/lib/health/flag-biomarker";
+import { normalizeBiomarkerName } from "@/lib/health/normalize-biomarker";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
@@ -108,14 +109,29 @@ export async function POST(request: Request) {
     const reflaggedBiomarkers = applyServerSideFlags(parsed.biomarkers);
     const reflaggedParsed = { ...parsed, biomarkers: reflaggedBiomarkers };
 
-    console.log("[PARSE] Server-side flags applied. Storing results...");
+    // Normalize biomarker names to canonical form (#51)
+    // This maps lab-specific names (e.g., "Glu", "FBS") to canonical names
+    // (e.g., "Glucose (Fasting)") while preserving the original extracted name.
+    const normalizedBiomarkers = reflaggedBiomarkers.map((b) => {
+      const norm = normalizeBiomarkerName(b.name);
+      return {
+        ...b,
+        name: norm.canonical,
+        original_name: b.name,
+        category: norm.category,
+      };
+    });
+
+    const normalizedParsed = { ...parsed, biomarkers: normalizedBiomarkers };
+
+    console.log("[PARSE] Biomarker names normalized. Storing results...");
     // Store parsed results
     const { data: parsedResult, error: insertError } = await supabase
       .from("parsed_results")
       .insert({
         report_id: report.id,
-        raw_extraction: reflaggedParsed,
-        biomarkers: reflaggedBiomarkers,
+        raw_extraction: normalizedParsed,
+        biomarkers: normalizedBiomarkers,
         summary_plain: parsed.summary,
       })
       .select("id")
@@ -134,8 +150,8 @@ export async function POST(request: Request) {
     }
     console.log("[PARSE] Stored parsed_result:", parsedResult.id);
 
-    // Create risk flags for each biomarker (using server-side flags)
-    const riskFlags = reflaggedBiomarkers
+    // Create risk flags for each biomarker (using server-side flags + normalized names)
+    const riskFlags = normalizedBiomarkers
       .filter((b) => b.flag && b.value != null)
       .map((b) => ({
         parsed_result_id: parsedResult.id,
