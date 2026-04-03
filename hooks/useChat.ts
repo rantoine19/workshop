@@ -10,6 +10,12 @@ export interface ChatMessage {
   isStreaming?: boolean;
 }
 
+export interface AttachedReport {
+  id: string;
+  filename: string;
+  date: string;
+}
+
 interface UseChatOptions {
   reportId?: string;
 }
@@ -55,7 +61,11 @@ export function useChat(options: UseChatOptions = {}) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attachedReport, setAttachedReport] = useState<AttachedReport | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Compute the effective report_id: prop takes precedence, then attached report
+  const effectiveReportId = options.reportId || attachedReport?.id;
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -85,7 +95,7 @@ export function useChat(options: UseChatOptions = {}) {
           body: JSON.stringify({
             message: content.trim(),
             session_id: sessionId,
-            report_id: options.reportId,
+            report_id: effectiveReportId,
           }),
           signal: controller.signal,
         });
@@ -173,7 +183,7 @@ export function useChat(options: UseChatOptions = {}) {
         abortRef.current = null;
       }
     },
-    [isLoading, sessionId, options.reportId]
+    [isLoading, sessionId, effectiveReportId]
   );
 
   const clearChat = useCallback(() => {
@@ -229,7 +239,18 @@ export function useChat(options: UseChatOptions = {}) {
     abortRef.current?.abort();
     setMessages([]);
     setSessionId(null);
+    setAttachedReport(null);
     setError(null);
+  }, []);
+
+  /** Attach a report to the current chat context */
+  const attachReport = useCallback((report: AttachedReport) => {
+    setAttachedReport(report);
+  }, []);
+
+  /** Detach the report from the chat context */
+  const detachReport = useCallback(() => {
+    setAttachedReport(null);
   }, []);
 
   return {
@@ -241,5 +262,8 @@ export function useChat(options: UseChatOptions = {}) {
     sessionId,
     switchSession,
     startNewChat,
+    attachedReport,
+    attachReport,
+    detachReport,
   };
 }

@@ -928,6 +928,128 @@ button.chat-send-button[type="submit"]:disabled {
   font-size: 0.85rem;
 }
 
+/* Report Selector */
+
+.report-selector {
+  background: #f0faf4;
+  border: 1px solid #b8e6cc;
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin: 0.5rem 0.25rem 1rem;
+}
+
+.report-selector__prompt {
+  font-size: 0.95rem;
+  color: #1a3a2a;
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+
+.report-selector__loading {
+  color: #5a8a6a;
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+.report-selector__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.report-selector__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d0e8d8;
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+.report-selector__item:hover {
+  border-color: #4a9c6d;
+  background: #f7fdf9;
+}
+
+.report-selector__item--selected {
+  border-color: #2d8a4e;
+  background: #e8f5ee;
+}
+
+.report-selector__item-name {
+  font-weight: 500;
+  color: #1a3a2a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 0.5rem;
+}
+
+.report-selector__item-date {
+  color: #6b8a7a;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.report-selector__skip {
+  background: none;
+  border: none;
+  color: #5a8a6a;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-decoration: underline;
+}
+
+.report-selector__skip:hover {
+  color: #2d8a4e;
+}
+
+/* Report Context Indicator */
+
+.chat-report-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e8f5ee;
+  border: 1px solid #b8e6cc;
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.4rem 0.75rem;
+  margin: 0 0.75rem 0.25rem;
+  font-size: 0.8rem;
+}
+
+.chat-report-indicator__text {
+  color: #1a3a2a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-report-indicator__remove {
+  background: none;
+  border: none;
+  color: #6b8a7a;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0 0.25rem;
+  line-height: 1;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.chat-report-indicator__remove:hover {
+  color: #cc0000;
+}
+
 /* =========================
    Health Summary Styles
    ========================= */

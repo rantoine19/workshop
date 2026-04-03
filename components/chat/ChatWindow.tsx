@@ -5,6 +5,7 @@ import { useChat } from "@/hooks/useChat";
 import { MessageBubble, BotAvatar } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import { ChatSidebar } from "./ChatSidebar";
+import { ReportSelector } from "./ReportSelector";
 import NavHeader from "@/components/ui/NavHeader";
 
 interface ChatWindowProps {
@@ -20,9 +21,18 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
     sessionId,
     switchSession,
     startNewChat,
+    attachedReport,
+    attachReport,
+    detachReport,
   } = useChat({ reportId });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+  const [selectorDismissed, setSelectorDismissed] = useState(false);
+
+  // Show report selector when: no reportId prop, no active session, not dismissed,
+  // and no report already attached
+  const showReportSelector =
+    !reportId && !sessionId && !selectorDismissed && !attachedReport && messages.length === 0;
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -37,6 +47,18 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
     }
     prevMessageCountRef.current = messages.length;
   }, [messages.length]);
+
+  // Reset selector dismissed state when starting a new chat
+  const prevSessionId = useRef(sessionId);
+  useEffect(() => {
+    if (prevSessionId.current !== null && sessionId === null) {
+      setSelectorDismissed(false);
+    }
+    prevSessionId.current = sessionId;
+  }, [sessionId]);
+
+  // Whether there is any report context active (prop or attached)
+  const hasReportContext = !!reportId || !!attachedReport;
 
   return (
     <div className="chat-layout">
@@ -56,7 +78,16 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
         </div>
 
         <div className="chat-messages" role="log" aria-live="polite">
-          {messages.length === 0 && !isLoading && (
+          {showReportSelector && (
+            <ReportSelector
+              onSelect={(report) => {
+                attachReport(report);
+              }}
+              onSkip={() => setSelectorDismissed(true)}
+            />
+          )}
+
+          {messages.length === 0 && !isLoading && !showReportSelector && (
             <div className="chat-welcome">
               <h2>Welcome to HealthChat AI</h2>
               <p>
@@ -99,6 +130,22 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
 
           <div ref={messagesEndRef} />
         </div>
+
+        {hasReportContext && attachedReport && (
+          <div className="chat-report-indicator" role="status">
+            <span className="chat-report-indicator__text">
+              Discussing: {attachedReport.filename} ({attachedReport.date})
+            </span>
+            <button
+              className="chat-report-indicator__remove"
+              onClick={detachReport}
+              type="button"
+              aria-label="Detach report"
+            >
+              x
+            </button>
+          </div>
+        )}
 
         <ChatInput onSend={sendMessage} disabled={isLoading} />
       </div>
