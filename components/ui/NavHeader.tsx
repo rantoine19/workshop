@@ -39,6 +39,9 @@ export default function NavHeader({
         <Link href="/chat" className={linkClass("/chat")}>
           Chat
         </Link>
+        <Link href="/reports" className={linkClass("/reports")}>
+          Reports
+        </Link>
         <Link href="/profile" className={linkClass("/profile")}>
           Profile
         </Link>
