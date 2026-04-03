@@ -1,13 +1,20 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
+import Avatar from "./Avatar";
 
 interface NavHeaderProps {
   showBack?: boolean;
   backHref?: string;
   backLabel?: string;
+}
+
+interface ProfileInfo {
+  avatar_url: string | null;
+  display_name: string | null;
 }
 
 export default function NavHeader({
@@ -16,6 +23,26 @@ export default function NavHeader({
   backLabel = "Dashboard",
 }: NavHeaderProps) {
   const pathname = usePathname();
+  const [profileInfo, setProfileInfo] = useState<ProfileInfo | null>(null);
+
+  useEffect(() => {
+    fetch("/api/profile")
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data?.profile) {
+          setProfileInfo({
+            avatar_url: data.profile.avatar_url || null,
+            display_name: data.profile.display_name || null,
+          });
+        }
+      })
+      .catch(() => {
+        // Silent fail — avatar is non-critical
+      });
+  }, []);
 
   const linkClass = (href: string) => {
     const isActive = pathname === href || pathname.startsWith(href + "/");
@@ -43,7 +70,16 @@ export default function NavHeader({
           Reports
         </Link>
         <Link href="/profile" className={linkClass("/profile")}>
-          Profile
+          <span className="nav-header__profile-link">
+            {profileInfo && (
+              <Avatar
+                avatarUrl={profileInfo.avatar_url}
+                displayName={profileInfo.display_name}
+                size="sm"
+              />
+            )}
+            Profile
+          </span>
         </Link>
       </nav>
     </header>

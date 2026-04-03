@@ -27,10 +27,32 @@ describe("Single Report API Route", () => {
 describe("Report Results Page", () => {
   const mockFetch = vi.fn();
 
+  // Profile API response for NavHeader avatar fetch
+  const profileResponse = {
+    ok: true,
+    json: async () => ({
+      profile: {
+        id: "user-1",
+        display_name: null,
+        avatar_url: null,
+        updated_at: null,
+      },
+    }),
+  };
+
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    vi.spyOn(globalThis, "fetch").mockImplementation(mockFetch);
+    // Wrap mockFetch to auto-handle NavHeader's /api/profile calls
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      (input: string | URL | Request, ...args: unknown[]) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        if (url === "/api/profile") {
+          return Promise.resolve(profileResponse as Response);
+        }
+        return mockFetch(input, ...args);
+      }
+    );
 
     vi.doMock("next/navigation", () => ({
       useParams: () => ({ id: "report-abc" }),
@@ -236,10 +258,32 @@ describe("Report Results Layout", () => {
 describe("ReportList Component", () => {
   const mockFetch = vi.fn();
 
+  // Profile API response for NavHeader avatar fetch
+  const profileResponse = {
+    ok: true,
+    json: async () => ({
+      profile: {
+        id: "user-1",
+        display_name: null,
+        avatar_url: null,
+        updated_at: null,
+      },
+    }),
+  };
+
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    vi.spyOn(globalThis, "fetch").mockImplementation(mockFetch);
+    // Wrap mockFetch to auto-handle NavHeader's /api/profile calls
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      (input: string | URL | Request, ...args: unknown[]) => {
+        const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        if (url === "/api/profile") {
+          return Promise.resolve(profileResponse as Response);
+        }
+        return mockFetch(input, ...args);
+      }
+    );
   });
 
   it("renders reports with file names and status badges", async () => {

@@ -1291,6 +1291,119 @@ button.chat-send-button[type="submit"]:disabled {
   text-align: center;
 }
 
+/* ── Avatar Component ────────────────────────────────────── */
+
+.avatar {
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-green-100);
+  color: var(--color-green-700);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar--sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+
+.avatar--md {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+}
+
+.avatar--lg {
+  width: 80px;
+  height: 80px;
+  font-size: 1.5rem;
+}
+
+.avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar__initials {
+  user-select: none;
+}
+
+/* ── Profile Avatar Section ──────────────────────────────── */
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  background: var(--color-gray-50);
+  border-radius: var(--radius-md);
+}
+
+.profile-avatar__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-avatar__input {
+  display: none;
+}
+
+.profile-avatar__upload-btn {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  background: var(--color-green-600);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.profile-avatar__upload-btn:hover {
+  background: var(--color-green-700);
+}
+
+.profile-avatar__remove-btn {
+  padding: 0.4rem 1rem;
+  background: none;
+  border: 1px solid var(--color-gray-300);
+  color: var(--color-gray-600);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.profile-avatar__remove-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.profile-avatar__remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.profile-avatar__hint {
+  font-size: 0.75rem;
+  color: var(--color-gray-400);
+}
+
+/* ── NavHeader Profile Link with Avatar ──────────────────── */
+
+.nav-header__profile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 /* ── Doctor Prep Page ─────────────────────────────────────── */
 
 .doctor-prep {
