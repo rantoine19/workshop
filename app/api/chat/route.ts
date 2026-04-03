@@ -51,7 +51,6 @@ export async function POST(request: Request) {
 
   // Create or load chat session
   let sessionId = body.session_id;
-
   if (sessionId) {
     // Verify session exists and belongs to user (RLS handles this)
     const { data: session } = await supabase
@@ -67,12 +66,16 @@ export async function POST(request: Request) {
       );
     }
   } else {
-    // Create new session
+    // Create new session with title from first message
+    const title =
+      userMessage.substring(0, 50) + (userMessage.length > 50 ? "..." : "");
+
     const { data: newSession, error: sessionError } = await supabase
       .from("chat_sessions")
       .insert({
         user_id: user.id,
         report_id: body.report_id || null,
+        title,
       })
       .select("id")
       .single();
@@ -178,6 +181,12 @@ export async function POST(request: Request) {
             { session_id: sessionId, role: "user", content: userMessage },
             { session_id: sessionId, role: "assistant", content: assistantContent },
           ]);
+
+        // Update session's updated_at timestamp
+        await supabase
+          .from("chat_sessions")
+          .update({ updated_at: new Date().toISOString() })
+          .eq("id", sessionId);
 
         if (insertError) {
           // Log to Sentry for ops visibility — NO PHI (no message content)
