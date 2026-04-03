@@ -184,6 +184,54 @@ export function useChat(options: UseChatOptions = {}) {
     setError(null);
   }, []);
 
+  /** Load an existing session's messages by ID */
+  const switchSession = useCallback(
+    async (targetSessionId: string) => {
+      // Abort any in-flight stream
+      abortRef.current?.abort();
+      setError(null);
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(
+          `/api/chat/sessions/${targetSessionId}/messages`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load session");
+        }
+
+        const data = await response.json();
+        const loaded: ChatMessage[] = (data.messages || []).map(
+          (msg: { id: string; role: "user" | "assistant"; content: string; created_at: string }) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date(msg.created_at),
+          })
+        );
+
+        setMessages(loaded);
+        setSessionId(targetSessionId);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load session";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  /** Start a new chat — clears messages and session */
+  const startNewChat = useCallback(() => {
+    abortRef.current?.abort();
+    setMessages([]);
+    setSessionId(null);
+    setError(null);
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -191,5 +239,7 @@ export function useChat(options: UseChatOptions = {}) {
     sendMessage,
     clearChat,
     sessionId,
+    switchSession,
+    startNewChat,
   };
 }
