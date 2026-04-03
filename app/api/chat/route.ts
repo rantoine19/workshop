@@ -87,13 +87,12 @@ export async function POST(request: Request) {
     sessionId = newSession.id;
   }
 
-  // Load report context — use specific report_id if provided,
-  // otherwise auto-load ALL parsed reports for this user
+  // Load report context only for the specific report_id.
+  // Each chat session is tied to one report — results may differ between reports.
   let reportContext = "";
   const reportId = body.report_id;
 
   if (reportId) {
-    // Specific report requested (e.g., from "Chat About Results" link)
     const { data: parsedResult } = await supabase
       .from("parsed_results")
       .select("biomarkers, summary_plain")
@@ -104,39 +103,6 @@ export async function POST(request: Request) {
 
     if (parsedResult && parsedResult.biomarkers) {
       reportContext = buildReportContext(parsedResult);
-    }
-  } else {
-    // No specific report — load all user's parsed reports for context
-    const { data: userReports } = await supabase
-      .from("reports")
-      .select("id, original_filename, created_at, parsed_results(biomarkers, summary_plain)")
-      .eq("status", "parsed")
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    if (userReports && userReports.length > 0) {
-      const reportSections = userReports
-        .filter((r) => {
-          const pr = Array.isArray(r.parsed_results)
-            ? r.parsed_results[0]
-            : r.parsed_results;
-          return pr && pr.biomarkers;
-        })
-        .map((r) => {
-          const pr = Array.isArray(r.parsed_results)
-            ? r.parsed_results[0]
-            : r.parsed_results;
-          const date = new Date(r.created_at).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          });
-          return `--- Report: ${r.original_filename} (${date}) ---\n${buildReportContext(pr as { biomarkers: Array<{ name: string; value: number; unit: string; reference_low: number | null; reference_high: number | null; flag: string }>; summary_plain: string })}`;
-        });
-
-      if (reportSections.length > 0) {
-        reportContext = `The patient has ${reportSections.length} uploaded report(s). Here is their health data:\n\n${reportSections.join("\n\n")}`;
-      }
     }
   }
 

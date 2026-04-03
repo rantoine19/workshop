@@ -2064,8 +2064,8 @@ button.chat-send-button[type="submit"]:disabled {
 
 .report-list__item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
   background: white;
   border: 1px solid var(--color-gray-200);
@@ -2082,10 +2082,23 @@ button.chat-send-button[type="submit"]:disabled {
   transform: translateY(-1px);
 }
 
+.report-list__item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--color-gray-50);
+  border-radius: var(--radius-sm);
+}
+
 .report-list__item-info {
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .report-list__item-name {
@@ -2104,27 +2117,29 @@ button.chat-send-button[type="submit"]:disabled {
   border-radius: 9999px;
   font-size: 0.6875rem;
   font-weight: 500;
+  flex-shrink: 0;
+  margin-left: auto;
   white-space: nowrap;
 }
 
-.report-list__item-status--completed {
+.report-list__item-status--parsed {
   background: var(--color-green-100);
   color: var(--color-green-800);
 }
 
-.report-list__item-status--processing {
+.report-list__item-status--parsing {
   background: var(--color-blue-100);
   color: #1e40af;
 }
 
-.report-list__item-status--pending {
+.report-list__item-status--uploaded {
   background: var(--color-orange-100);
   color: var(--color-orange-700);
 }
 
 .report-list__item-status--error {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--color-red-100);
+  color: var(--color-red-600);
 }
 
 
