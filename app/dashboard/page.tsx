@@ -2,8 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogoutButton } from "./logout-button";
-import ReportList from "@/components/reports/ReportList";
 import Logo from "@/components/ui/Logo";
+import { ReportsCardBadge } from "./reports-card-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +54,21 @@ export default async function DashboardPage() {
           <h3>Chat</h3>
           <p>Ask questions about your health data in plain language</p>
         </Link>
+        <Link href="/reports" className="dashboard-card dashboard-card--reports">
+          <div className="dashboard-card__icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+              <rect x="9" y="3" width="6" height="4" rx="1" />
+              <line x1="9" y1="12" x2="15" y2="12" />
+              <line x1="9" y1="16" x2="13" y2="16" />
+            </svg>
+          </div>
+          <div className="dashboard-card__title-row">
+            <h3>Your Reports</h3>
+            <ReportsCardBadge />
+          </div>
+          <p>View uploaded reports and analysis results</p>
+        </Link>
         <Link href="/profile" className="dashboard-card dashboard-card--profile">
           <div className="dashboard-card__icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -65,10 +80,6 @@ export default async function DashboardPage() {
           <p>Manage your personal information for personalized health insights</p>
         </Link>
       </nav>
-
-      <section className="dashboard-reports">
-        <ReportList />
-      </section>
     </div>
   );
 }

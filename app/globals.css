@@ -320,6 +320,10 @@ button[type="submit"]:disabled {
   border-left-color: var(--color-green-400);
 }
 
+.dashboard-card--reports {
+  border-left-color: var(--color-blue-500);
+}
+
 .dashboard-card--profile {
   border-left-color: var(--color-green-600);
 }
@@ -336,6 +340,15 @@ button[type="submit"]:disabled {
   color: var(--color-green-600);
 }
 
+.dashboard-card--reports .dashboard-card__icon {
+  background: var(--color-blue-50);
+  color: var(--color-blue-600);
+}
+
+.dashboard-card--reports h3 {
+  color: var(--color-blue-700);
+}
+
 .dashboard-card h3 {
   margin: 0 0 0.25rem 0;
   font-size: 1.1rem;
@@ -346,6 +359,31 @@ button[type="submit"]:disabled {
   margin: 0;
   font-size: 0.85rem;
   color: var(--color-gray-500);
+}
+
+.dashboard-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.35rem;
+  background: var(--color-blue-500);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.reports-page {
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .logout-button {
@@ -1976,9 +2014,6 @@ button.chat-send-button[type="submit"]:disabled {
   color: #991b1b;
 }
 
-.dashboard-reports {
-  margin-top: 1rem;
-}
 
 /* =========================
    Mobile Responsive
