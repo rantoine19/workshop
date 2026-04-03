@@ -172,7 +172,7 @@ export default function ReportResultsPage() {
                 results
               </p>
             </Link>
-            <Link href="/chat" className="report-results__nav-card">
+            <Link href={`/chat?report_id=${reportId}`} className="report-results__nav-card">
               <h3>Chat About Results</h3>
               <p>
                 Ask questions about your health data in plain language
