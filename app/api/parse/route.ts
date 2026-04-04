@@ -103,10 +103,22 @@ export async function POST(request: Request) {
 
     console.log("[PARSE] Claude returned", parsed.biomarkers.length, "biomarkers. Applying server-side risk flags...");
 
+    // Load user's custom reference ranges (#50)
+    // Custom ranges override defaults for personalized flagging.
+    const { data: customRanges } = await supabase
+      .from("custom_reference_ranges")
+      .select("biomarker_name, green_low, green_high, yellow_low, yellow_high, red_low, red_high, direction, source")
+      .eq("user_id", user.id);
+
     // Apply deterministic server-side flagging (fixes #87)
     // This overrides Claude's advisory flags with verified reference ranges.
+    // Custom ranges take priority over defaults (#50).
     // Claude's flag is kept as fallback only for unrecognized biomarkers.
-    const reflaggedBiomarkers = applyServerSideFlags(parsed.biomarkers);
+    const reflaggedBiomarkers = applyServerSideFlags(
+      parsed.biomarkers,
+      undefined,
+      customRanges ?? undefined
+    );
     const reflaggedParsed = { ...parsed, biomarkers: reflaggedBiomarkers };
 
     // Normalize biomarker names to canonical form (#51)

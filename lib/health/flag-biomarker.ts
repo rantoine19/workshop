@@ -6,7 +6,23 @@
  * didn't include reference ranges.
  */
 
-import { REFERENCE_RANGES, type RiskFlag, type ReferenceRange } from "./reference-ranges";
+import { REFERENCE_RANGES, type RiskFlag, type ReferenceRange, type RangeThreshold } from "./reference-ranges";
+
+/**
+ * Shape of a custom reference range row from the database.
+ * Used to override default ranges on a per-user, per-biomarker basis (#50).
+ */
+export interface CustomRange {
+  biomarker_name: string;
+  green_low: number | null;
+  green_high: number | null;
+  yellow_low: number | null;
+  yellow_high: number | null;
+  red_low: number | null;
+  red_high: number | null;
+  direction: "lower-is-better" | "higher-is-better" | "range";
+  source?: string | null;
+}
 
 /**
  * Measurements that should NOT be flagged as risk indicators.
@@ -225,16 +241,101 @@ export function applyServerSideFlags<
   T extends { name: string; value: number | null; flag: RiskFlag },
 >(
   biomarkers: T[],
-  gender?: "male" | "female"
+  gender?: "male" | "female",
+  customRanges?: CustomRange[]
 ): T[] {
   return biomarkers.map((b) => {
     if (b.value == null) return b;
 
-    const serverFlag = flagBiomarker(b.name, b.value, gender);
+    const serverFlag = flagBiomarkerWithCustomRanges(
+      b.name,
+      b.value,
+      customRanges,
+      gender
+    );
     if (serverFlag) {
       return { ...b, flag: serverFlag };
     }
     // Keep Claude's flag as fallback for unrecognized biomarkers
     return b;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Custom reference range support (#50)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a lookup map from normalized biomarker name to CustomRange.
+ */
+function buildCustomRangeMap(
+  customRanges: CustomRange[]
+): Map<string, CustomRange> {
+  const map = new Map<string, CustomRange>();
+  for (const cr of customRanges) {
+    map.set(normalizeName(cr.biomarker_name), cr);
+  }
+  return map;
+}
+
+/**
+ * Convert a CustomRange row into a ReferenceRange-like object
+ * so we can reuse the existing classify* functions.
+ */
+function customRangeToReferenceRange(cr: CustomRange): ReferenceRange {
+  return {
+    name: cr.biomarker_name,
+    aliases: [],
+    unit: "",
+    ranges: {
+      green: { low: cr.green_low, high: cr.green_high } as RangeThreshold,
+      yellow: { low: cr.yellow_low, high: cr.yellow_high } as RangeThreshold,
+      red: { low: cr.red_low, high: cr.red_high } as RangeThreshold,
+    },
+    direction: cr.direction,
+    source: cr.source ?? "Custom",
+  };
+}
+
+/**
+ * Flag a biomarker value, checking user's custom ranges first,
+ * then falling back to default server-side reference ranges.
+ *
+ * @param name - The biomarker name as extracted by Claude
+ * @param value - The numeric value
+ * @param customRanges - Optional array of user's custom ranges from the database
+ * @param gender - Optional patient gender for gender-specific ranges
+ * @returns The risk flag color, or null if no matching range is found
+ */
+export function flagBiomarkerWithCustomRanges(
+  name: string,
+  value: number,
+  customRanges?: CustomRange[],
+  gender?: "male" | "female"
+): RiskFlag | null {
+  // Skip measurements that aren't risk indicators on their own
+  const normalized = normalizeName(name);
+  if (SKIP_FLAG_NAMES.some((skip) => normalized === skip)) {
+    return "green";
+  }
+
+  // Check custom ranges first
+  if (customRanges && customRanges.length > 0) {
+    const customMap = buildCustomRangeMap(customRanges);
+    const customRange = customMap.get(normalized);
+    if (customRange) {
+      const ref = customRangeToReferenceRange(customRange);
+      switch (ref.direction) {
+        case "lower-is-better":
+          return classifyLowerIsBetter(value, ref);
+        case "higher-is-better":
+          return classifyHigherIsBetter(value, ref);
+        case "range":
+          return classifyRange(value, ref);
+      }
+    }
+  }
+
+  // Fall back to default reference ranges
+  return flagBiomarker(name, value, gender);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
 import Avatar from "@/components/ui/Avatar";
 
@@ -275,6 +276,11 @@ export default function ProfilePage() {
           Last updated: {new Date(profile.updated_at).toLocaleDateString()}
         </p>
       )}
+
+      <Link href="/profile/reference-ranges" className="profile-page__link-card">
+        <h3>Custom Reference Ranges</h3>
+        <p>Set personalized reference ranges from your doctor to override default thresholds.</p>
+      </Link>
     </div>
   );
 }
