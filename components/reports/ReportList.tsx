@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Report {
   id: string;
@@ -15,6 +16,8 @@ export default function ReportList() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Report | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -40,6 +43,26 @@ export default function ReportList() {
       setLoading(false);
     }
   }, []);
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/reports/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete report");
+      }
+      setReports((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch {
+      setError("Failed to delete report. Please try again.");
+      setDeleteTarget(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteTarget]);
 
   useEffect(() => {
     fetchReports();
@@ -130,9 +153,31 @@ export default function ReportList() {
             >
               {statusLabel[report.status] || report.status}
             </span>
+            <button
+              className="delete-btn delete-btn--icon"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDeleteTarget(report);
+              }}
+              aria-label={`Delete ${report.file_name}`}
+            >
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 6L14 14M14 6L6 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
           </Link>
         ))}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title="Delete Report"
+        message={`Are you sure you want to delete "${deleteTarget?.file_name}"? This will permanently remove this report and all its analysis data.`}
+        confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

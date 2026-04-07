@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import HealthSummary from "@/components/reports/HealthSummary";
 import RiskDashboard from "@/components/reports/RiskDashboard";
 import NavHeader from "@/components/ui/NavHeader";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface ReportData {
   id: string;
@@ -20,9 +21,13 @@ export default function ReportResultsPage() {
   const params = useParams();
   const reportId = params.id as string;
 
+  const router = useRouter();
+
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchReport = useCallback(async () => {
     setLoading(true);
@@ -51,6 +56,24 @@ export default function ReportResultsPage() {
       setLoading(false);
     }
   }, [reportId]);
+
+  const handleDelete = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/reports/${reportId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete report");
+      }
+      router.push("/reports");
+    } catch {
+      setError("Failed to delete report. Please try again.");
+      setShowDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [reportId, router]);
 
   useEffect(() => {
     fetchReport();
@@ -99,7 +122,17 @@ export default function ReportResultsPage() {
     <div className="report-results">
       <div className="report-results__header">
         <NavHeader backLabel="Dashboard" />
-        <h1>{report.file_name}</h1>
+        <div className="report-results__title-row">
+          <h1>{report.file_name}</h1>
+          <button
+            className="delete-btn delete-btn--danger"
+            onClick={() => setShowDeleteDialog(true)}
+            disabled={isDeleting}
+            aria-label="Delete report"
+          >
+            {isDeleting ? "Deleting..." : "Delete Report"}
+          </button>
+        </div>
         <p className="report-results__meta">
           Uploaded {new Date(report.created_at).toLocaleDateString("en-US", {
             year: "numeric",
@@ -181,6 +214,15 @@ export default function ReportResultsPage() {
           </nav>
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        title="Delete Report"
+        message="Are you sure? This will permanently delete this report and all its analysis data."
+        confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteDialog(false)}
+      />
     </div>
   );
 }

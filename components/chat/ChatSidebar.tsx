@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export interface ChatSession {
   id: string;
@@ -41,6 +42,8 @@ export function ChatSidebar({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChatSession | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchSessions = useCallback(async (page: number) => {
     setIsLoading(true);
@@ -59,6 +62,31 @@ export function ChatSidebar({
       setIsLoading(false);
     }
   }, []);
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/chat/sessions/${deleteTarget.id}`,
+        { method: "DELETE" }
+      );
+      if (!response.ok) throw new Error("Failed to delete session");
+
+      setSessions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+
+      // If deleting the active session, start a new chat
+      if (activeSessionId === deleteTarget.id) {
+        onNewChat();
+      }
+      setDeleteTarget(null);
+    } catch {
+      // Silently fail — user can retry
+      setDeleteTarget(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteTarget, activeSessionId, onNewChat]);
 
   // Load sessions on mount and when refreshKey changes
   useEffect(() => {
@@ -150,33 +178,49 @@ export function ChatSidebar({
           )}
 
           {sessions.map((session) => (
-            <button
+            <div
               key={session.id}
               className={`chat-sidebar__item ${
                 activeSessionId === session.id
                   ? "chat-sidebar__item--active"
                   : ""
               }`}
-              onClick={() => {
-                onSelectSession(session.id);
-                setIsOpen(false);
-              }}
-              title={session.title}
             >
-              <span className="chat-sidebar__item-title">
-                {session.title}
-              </span>
-              <span className="chat-sidebar__item-meta">
-                <span className="chat-sidebar__item-date">
-                  {formatDate(session.updated_at)}
+              <button
+                className="chat-sidebar__item-btn"
+                onClick={() => {
+                  onSelectSession(session.id);
+                  setIsOpen(false);
+                }}
+                title={session.title}
+              >
+                <span className="chat-sidebar__item-title">
+                  {session.title}
                 </span>
-                {session.message_count > 0 && (
-                  <span className="chat-sidebar__item-count">
-                    {session.message_count} msg{session.message_count !== 1 ? "s" : ""}
+                <span className="chat-sidebar__item-meta">
+                  <span className="chat-sidebar__item-date">
+                    {formatDate(session.updated_at)}
                   </span>
-                )}
-              </span>
-            </button>
+                  {session.message_count > 0 && (
+                    <span className="chat-sidebar__item-count">
+                      {session.message_count} msg{session.message_count !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </span>
+              </button>
+              <button
+                className="delete-btn delete-btn--icon chat-sidebar__delete-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteTarget(session);
+                }}
+                aria-label={`Delete "${session.title}"`}
+              >
+                <svg viewBox="0 0 20 20" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 6L14 14M14 6L6 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
           ))}
         </div>
 
@@ -204,6 +248,15 @@ export function ChatSidebar({
           </div>
         )}
       </aside>
+
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title="Delete Conversation"
+        message="Delete this conversation? This cannot be undone."
+        confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </>
   );
 }

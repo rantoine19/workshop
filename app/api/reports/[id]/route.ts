@@ -2,6 +2,80 @@ import { createClient } from "@/lib/supabase/server";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const supabase = await createClient();
+  const { id: reportId } = await params;
+
+  // Verify authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Fetch report to verify ownership and get file_path for storage cleanup
+  const { data: report, error: reportError } = await supabase
+    .from("reports")
+    .select("id, user_id, file_path")
+    .eq("id", reportId)
+    .single();
+
+  if (reportError || !report) {
+    return NextResponse.json({ error: "Report not found" }, { status: 404 });
+  }
+
+  // Verify ownership (defense-in-depth — RLS also enforces this)
+  if (report.user_id !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Delete storage file (best-effort — don't block on storage failure)
+  if (report.file_path) {
+    const { error: storageError } = await supabase.storage
+      .from("medical-reports")
+      .remove([report.file_path]);
+
+    if (storageError) {
+      console.error(
+        "[DELETE REPORT] Storage cleanup failed:",
+        storageError.message
+      );
+    }
+  }
+
+  // Delete report record (cascades to parsed_results, risk_flags, doctor_questions)
+  const { error: deleteError } = await supabase
+    .from("reports")
+    .delete()
+    .eq("id", reportId);
+
+  if (deleteError) {
+    return NextResponse.json(
+      { error: "Failed to delete report" },
+      { status: 500 }
+    );
+  }
+
+  // Audit log the deletion
+  logAuditEvent({
+    userId: user.id,
+    action: "report.delete",
+    resourceType: "report",
+    resourceId: reportId,
+    ipAddress: getClientIp(request),
+  });
+
+  return NextResponse.json(
+    { message: "Report deleted successfully" },
+    { status: 200 }
+  );
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
