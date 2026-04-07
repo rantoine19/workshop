@@ -2857,3 +2857,203 @@ button.chat-send-button[type="submit"]:disabled {
     gap: 0.25rem;
   }
 }
+
+/* =========================
+   Confirm Dialog (BEM)
+   ========================= */
+
+.confirm-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.confirm-dialog__content {
+  position: relative;
+  z-index: 1001;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem;
+  max-width: 400px;
+  width: calc(100% - 2rem);
+  animation: confirm-dialog-enter 0.15s ease-out;
+}
+
+@keyframes confirm-dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.confirm-dialog__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-gray-900);
+}
+
+.confirm-dialog__message {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.confirm-dialog__cancel {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-gray-700);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.confirm-dialog__cancel:hover {
+  background: var(--color-gray-100);
+}
+
+.confirm-dialog__confirm--danger {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-red-600);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.confirm-dialog__confirm--danger:hover {
+  background: var(--color-red-500);
+}
+
+/* =========================
+   Delete Button (BEM)
+   ========================= */
+
+.delete-btn--danger {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--color-red-600);
+  border-radius: var(--radius-sm);
+  background: white;
+  color: var(--color-red-600);
+  font-size: 0.813rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.delete-btn--danger:hover {
+  background: var(--color-red-600);
+  color: white;
+}
+
+.delete-btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-btn--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-gray-400);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.delete-btn--icon:hover {
+  color: var(--color-red-600);
+  background: var(--color-red-100);
+}
+
+/* Report detail title row */
+.report-results__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.report-results__title-row h1 {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Report list item: position delete button */
+.report-list__item {
+  position: relative;
+}
+
+.report-list__item .delete-btn--icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.report-list__item:hover .delete-btn--icon {
+  opacity: 1;
+}
+
+/* Chat sidebar item: row layout for session + delete */
+.chat-sidebar__item {
+  position: relative;
+}
+
+.chat-sidebar__item-btn {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.chat-sidebar__delete-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.375rem;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.chat-sidebar__item:hover .chat-sidebar__delete-btn {
+  opacity: 1;
+}

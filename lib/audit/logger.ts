@@ -4,7 +4,9 @@ export type AuditAction =
   | "report.upload"
   | "report.view"
   | "report.parse"
+  | "report.delete"
   | "chat.message"
+  | "chat.delete"
   | "doctor_questions.generate";
 
 export type AuditResourceType = "report" | "chat_session" | "parsed_result";

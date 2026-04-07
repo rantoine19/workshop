@@ -57,6 +57,7 @@ describe("Report Results Page", () => {
     vi.doMock("next/navigation", () => ({
       useParams: () => ({ id: "report-abc" }),
       usePathname: () => "/reports/report-abc",
+      useRouter: () => ({ push: vi.fn() }),
     }));
   });
 

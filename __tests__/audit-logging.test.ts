@@ -163,7 +163,9 @@ describe("Audit Logger", () => {
         "report.upload",
         "report.view",
         "report.parse",
+        "report.delete",
         "chat.message",
+        "chat.delete",
         "doctor_questions.generate",
       ];
 
@@ -171,7 +173,9 @@ describe("Audit Logger", () => {
         "report.upload": "report",
         "report.view": "report",
         "report.parse": "report",
+        "report.delete": "report",
         "chat.message": "chat_session",
+        "chat.delete": "chat_session",
         "doctor_questions.generate": "parsed_result",
       };
 
