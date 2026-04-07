@@ -110,9 +110,18 @@ export default function ReportList() {
     error: "Error",
   };
 
+  const parsedReports = reports.filter((r) => r.status === "parsed");
+
   return (
     <div className="report-list">
-      <h2>Your Reports</h2>
+      <div className="report-list__header">
+        <h2>Your Reports</h2>
+        {parsedReports.length >= 2 && (
+          <Link href="/reports/compare" className="report-list__compare-link">
+            Compare Reports
+          </Link>
+        )}
+      </div>
       <div className="report-list__items">
         {reports.map((report) => (
           <Link

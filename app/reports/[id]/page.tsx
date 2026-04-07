@@ -211,6 +211,15 @@ export default function ReportResultsPage() {
                 Ask questions about your health data in plain language
               </p>
             </Link>
+            <Link
+              href={`/reports/compare?ids=${reportId}`}
+              className="report-results__nav-card"
+            >
+              <h3>Compare with Other Reports</h3>
+              <p>
+                Track changes in your biomarkers over time
+              </p>
+            </Link>
           </nav>
         </>
       )}
