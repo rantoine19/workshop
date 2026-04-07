@@ -1183,8 +1183,15 @@ button.chat-send-button[type="submit"]:disabled {
 .health-summary__biomarker-icon {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  color: var(--color-green-600);
+  width: 24px;
+  height: 24px;
+}
+
+.health-summary__biomarker-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .health-summary__biomarker-name {
