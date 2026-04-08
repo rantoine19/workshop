@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import HealthSummary from "@/components/reports/HealthSummary";
 import RiskDashboard from "@/components/reports/RiskDashboard";
+import WhatsChanged from "@/components/reports/WhatsChanged";
 import NavHeader from "@/components/ui/NavHeader";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -230,6 +231,8 @@ export default function ReportResultsPage() {
 
       {isParsed && (
         <>
+          <WhatsChanged reportId={reportId} />
+
           <section className="report-results__section">
             <RiskDashboard reportId={reportId} />
           </section>
