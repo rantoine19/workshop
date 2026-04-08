@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 import Logo from "@/components/ui/Logo";
 import { ReportsCardBadge } from "./reports-card-badge";
+import { WelcomeBanner } from "./welcome-banner";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,8 @@ export default async function DashboardPage() {
           Signed in as <strong>{user.email}</strong>
         </p>
       </section>
+
+      <WelcomeBanner />
 
       <nav className="dashboard-nav">
         <Link href="/upload" className="dashboard-card dashboard-card--upload">
