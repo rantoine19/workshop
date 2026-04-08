@@ -82,6 +82,97 @@ body {
   padding: 1.5rem 1.5rem 2rem;
 }
 
+/* ── Session Timeout Dialog (HIPAA) ──────────────────────── */
+
+.session-timeout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-timeout__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.session-timeout__dialog {
+  position: relative;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.session-timeout__icon {
+  color: var(--color-orange-500);
+  margin-bottom: 1rem;
+}
+
+.session-timeout__heading {
+  font-size: 1.25rem;
+  color: var(--color-gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.session-timeout__text {
+  font-size: 0.9rem;
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.session-timeout__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.session-timeout__stay-btn {
+  padding: 0.6rem 1.5rem;
+  background: var(--color-green-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.session-timeout__stay-btn:hover {
+  background: var(--color-green-700);
+}
+
+.session-timeout__logout-btn {
+  padding: 0.6rem 1.5rem;
+  background: none;
+  border: 1px solid var(--color-gray-300);
+  color: var(--color-gray-600);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.session-timeout__logout-btn:hover {
+  border-color: var(--color-red-500);
+  color: var(--color-red-500);
+}
+
+/* ── Base Typography ─────────────────────────────────────── */
+
 h1 {
   font-size: 1.75rem;
   margin-bottom: 0.5rem;
