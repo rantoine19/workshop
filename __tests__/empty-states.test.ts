@@ -203,7 +203,7 @@ describe("Empty States — helpful CTAs (#111)", () => {
       expect(typeof mod.WelcomeBanner).toBe("function");
     });
 
-    it("dashboard page imports WelcomeBanner", async () => {
+    it("dashboard page redirects new users to onboarding", async () => {
       const fs = await import("fs");
       const path = await import("path");
       const filePath = path.resolve(
@@ -212,8 +212,9 @@ describe("Empty States — helpful CTAs (#111)", () => {
       );
       const source = fs.readFileSync(filePath, "utf-8");
 
-      expect(source).toContain("WelcomeBanner");
-      expect(source).toContain("<WelcomeBanner");
+      // Onboarding wizard replaces WelcomeBanner for new users
+      expect(source).toContain("onboarding");
+      expect(source).toContain("display_name");
     });
 
     it("WelcomeBanner shows encouraging text and CTA", async () => {
