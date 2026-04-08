@@ -203,7 +203,8 @@ describe("Report Results Page", () => {
       expect(screen.getByText("Something went wrong")).toBeDefined();
     });
 
-    expect(screen.getByText("Upload Again")).toBeDefined();
+    expect(screen.getByText("Upload New Report")).toBeDefined();
+    expect(screen.getByText("Try Again")).toBeDefined();
   });
 
   it("shows error when report not found", async () => {

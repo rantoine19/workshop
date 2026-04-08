@@ -3039,6 +3039,46 @@ button.chat-send-button[type="submit"]:disabled {
   min-width: 0;
 }
 
+.report-results__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.report-results__reanalyze-btn {
+  padding: 0.6rem 1.25rem;
+  background: var(--color-green-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.report-results__reanalyze-btn:hover {
+  background: var(--color-green-700);
+}
+
+.report-results__reanalyze-btn:disabled {
+  background: var(--color-gray-400);
+  cursor: not-allowed;
+}
+
+.report-results__reanalyze-btn--sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.report-results__failed-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
 /* Report list item: position delete button */
 .report-list__item {
   position: relative;

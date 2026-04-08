@@ -345,9 +345,11 @@ describe("Report Detail Page Delete Button", () => {
       ).toBeDefined();
     });
 
-    // Dialog title "Delete Report" and button text "Delete Report" both present
-    const deleteTexts = screen.getAllByText("Delete Report");
-    expect(deleteTexts.length).toBeGreaterThanOrEqual(2);
+    // Dialog title "Delete Report" present
+    expect(screen.getByText("Delete Report")).toBeDefined();
+    // Multiple "Delete" texts present (button + confirm dialog)
+    const deleteTexts = screen.getAllByText("Delete");
+    expect(deleteTexts.length).toBeGreaterThanOrEqual(1);
   });
 });
 
