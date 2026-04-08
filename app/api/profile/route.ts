@@ -15,7 +15,7 @@ export async function GET() {
   // Fetch profile — RLS ensures only own profile is accessible
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, display_name, date_of_birth, gender, avatar_url, updated_at")
+    .select("id, display_name, date_of_birth, gender, avatar_url, height_inches, updated_at")
     .eq("id", user.id)
     .single();
 
@@ -35,6 +35,7 @@ export async function GET() {
         date_of_birth: null,
         gender: null,
         avatar_url: null,
+        height_inches: null,
         updated_at: null,
       },
     },
@@ -58,6 +59,7 @@ export async function PUT(request: Request) {
     display_name?: string;
     date_of_birth?: string;
     gender?: string;
+    height_inches?: number | null;
   };
   try {
     body = await request.json();
@@ -120,6 +122,21 @@ export async function PUT(request: Request) {
     }
   }
 
+  // Validate height_inches
+  if (body.height_inches !== undefined && body.height_inches !== null) {
+    if (
+      typeof body.height_inches !== "number" ||
+      !Number.isInteger(body.height_inches) ||
+      body.height_inches < 0 ||
+      body.height_inches > 108
+    ) {
+      return NextResponse.json(
+        { error: "height_inches must be an integer between 0 and 108" },
+        { status: 400 }
+      );
+    }
+  }
+
   // Build update object — only include provided fields
   const updateData: Record<string, unknown> = {
     id: user.id,
@@ -135,12 +152,15 @@ export async function PUT(request: Request) {
   if (body.gender !== undefined) {
     updateData.gender = body.gender;
   }
+  if (body.height_inches !== undefined) {
+    updateData.height_inches = body.height_inches;
+  }
 
   // Upsert profile — creates if not exists, updates if exists
   const { data: profile, error } = await supabase
     .from("profiles")
     .upsert(updateData, { onConflict: "id" })
-    .select("id, display_name, date_of_birth, gender, avatar_url, updated_at")
+    .select("id, display_name, date_of_birth, gender, avatar_url, height_inches, updated_at")
     .single();
 
   if (error) {
