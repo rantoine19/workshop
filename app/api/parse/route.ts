@@ -57,6 +57,23 @@ export async function POST(request: Request) {
     );
   }
 
+  // Delete old parsed results and risk flags (for re-analysis)
+  // This ensures a clean slate when re-parsing a report.
+  // Cascade from parsed_results → risk_flags → doctor_questions handles cleanup.
+  const { data: oldParsed } = await supabase
+    .from("parsed_results")
+    .select("id")
+    .eq("report_id", report.id);
+
+  if (oldParsed && oldParsed.length > 0) {
+    const oldIds = oldParsed.map((p) => p.id);
+    // Delete risk_flags and doctor_questions first (foreign key deps)
+    await supabase.from("risk_flags").delete().in("parsed_result_id", oldIds);
+    await supabase.from("doctor_questions").delete().in("parsed_result_id", oldIds);
+    await supabase.from("parsed_results").delete().eq("report_id", report.id);
+    console.log("[PARSE] Cleaned up", oldParsed.length, "old parsed result(s) for re-analysis");
+  }
+
   // Update status to 'parsing'
   await supabase
     .from("reports")

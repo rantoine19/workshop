@@ -231,11 +231,11 @@ export default function ReportResultsPage() {
       {isParsed && (
         <>
           <section className="report-results__section">
-            <HealthSummary reportId={reportId} />
+            <RiskDashboard reportId={reportId} />
           </section>
 
           <section className="report-results__section">
-            <RiskDashboard reportId={reportId} />
+            <HealthSummary reportId={reportId} />
           </section>
 
           <nav className="report-results__nav">
