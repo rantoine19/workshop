@@ -89,18 +89,37 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
 
           {messages.length === 0 && !isLoading && !showReportSelector && (
             <div className="chat-welcome">
-              <h2>Welcome to HealthChat AI</h2>
+              <div className="chat-welcome__avatar">
+                <BotAvatar />
+              </div>
+              <h2>Hi! I&apos;m your HealthChat guide</h2>
               <p>
-                Ask me anything about your lab results or medical reports.
-                I&apos;ll explain things in plain, simple language.
+                Ask me anything about your health data. I can explain lab
+                results, answer questions, and help you prepare for doctor
+                visits.
               </p>
               <div className="chat-suggestions">
-                <p>Try asking:</p>
-                <ul>
-                  <li>&quot;What does my cholesterol level mean?&quot;</li>
-                  <li>&quot;Are any of my results outside the normal range?&quot;</li>
-                  <li>&quot;What questions should I ask my doctor?&quot;</li>
-                </ul>
+                <button
+                  type="button"
+                  className="chat-suggestions__chip"
+                  onClick={() => sendMessage("What do my lab results mean?")}
+                >
+                  What do my lab results mean?
+                </button>
+                <button
+                  type="button"
+                  className="chat-suggestions__chip"
+                  onClick={() => sendMessage("Help me prepare for my doctor visit")}
+                >
+                  Help me prepare for my doctor visit
+                </button>
+                <button
+                  type="button"
+                  className="chat-suggestions__chip"
+                  onClick={() => sendMessage("Explain my cholesterol levels")}
+                >
+                  Explain my cholesterol levels
+                </button>
               </div>
             </div>
           )}

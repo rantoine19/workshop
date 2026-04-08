@@ -338,12 +338,12 @@ describe("ReportList Component", () => {
     render(React.createElement(ReportList));
 
     await waitFor(() => {
-      expect(screen.getByText("No reports yet.")).toBeDefined();
+      expect(screen.getByText("No reports yet")).toBeDefined();
     });
 
     expect(
       screen.getByText(
-        "Upload your first medical report to get started"
+        "Upload your first medical report to get started with health insights"
       )
     ).toBeDefined();
   });

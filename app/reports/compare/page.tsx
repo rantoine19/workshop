@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
 import TrendArrow from "@/components/reports/TrendArrow";
 
@@ -174,6 +175,33 @@ export default function ComparePage() {
         <NavHeader backLabel="Reports" />
         <div className="compare-page__loading">
           <p>Loading reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (reports.length < 2) {
+    return (
+      <div className="compare-page">
+        <NavHeader backLabel="Reports" />
+        <h1>Compare Reports</h1>
+        <div className="compare-page__empty">
+          <div className="empty-state__icon" aria-hidden="true">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="12" width="24" height="32" rx="3" fill="#dcfce7" stroke="#16a34a" strokeWidth="2"/>
+              <path d="M12 22h12M12 28h12M12 34h8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
+              <rect x="34" y="12" width="24" height="32" rx="3" fill="#dcfce7" stroke="#16a34a" strokeWidth="2"/>
+              <path d="M40 22h12M40 28h12M40 34h8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M28 28h8" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 3"/>
+            </svg>
+          </div>
+          <h3 className="empty-state__heading">Not enough reports to compare</h3>
+          <p className="empty-state__text">
+            Upload at least 2 reports to compare your biomarker trends side by side
+          </p>
+          <Link href="/upload" className="empty-state__cta">
+            Upload Report
+          </Link>
         </div>
       </div>
     );

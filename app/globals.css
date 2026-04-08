@@ -534,10 +534,30 @@ button[type="submit"]:disabled {
 
 .chat-sidebar__loading,
 .chat-sidebar__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 1.5rem 1rem;
   text-align: center;
   color: var(--color-gray-400);
   font-size: 0.85rem;
+}
+
+.chat-sidebar__empty-icon {
+  margin-bottom: 0.75rem;
+}
+
+.chat-sidebar__empty-heading {
+  font-weight: 600;
+  color: var(--color-gray-500);
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.chat-sidebar__empty-text {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--color-gray-400);
 }
 
 .chat-sidebar__item {
@@ -720,38 +740,57 @@ button[type="submit"]:disabled {
 }
 
 .chat-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 2.5rem 1rem;
   color: var(--color-gray-500);
 }
 
+.chat-welcome__avatar {
+  margin-bottom: 1rem;
+}
+
 .chat-welcome h2 {
-  margin-top: 0;
+  margin: 0 0 0.5rem;
   color: var(--color-gray-700);
+  font-size: 1.25rem;
+}
+
+.chat-welcome p {
+  max-width: 400px;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem;
 }
 
 .chat-suggestions {
-  margin-top: 1rem;
-  text-align: left;
-  display: inline-block;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0;
 }
 
-.chat-suggestions p {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+.chat-suggestions__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid var(--color-green-400);
+  border-radius: 999px;
+  background: var(--color-green-50);
+  color: var(--color-green-700);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  font-family: inherit;
 }
 
-.chat-suggestions ul {
-  list-style: none;
-  padding: 0;
-}
-
-.chat-suggestions li {
-  color: var(--color-green-600);
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
-  cursor: default;
+.chat-suggestions__chip:hover {
+  background: var(--color-green-100);
+  border-color: var(--color-green-500);
 }
 
 .chat-loading {
@@ -2407,9 +2446,52 @@ button.chat-send-button[type="submit"]:disabled {
 }
 
 .report-list--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 1.5rem;
+  padding: 2.5rem 1.5rem;
   color: var(--color-gray-500);
+}
+
+.report-list--empty .empty-state__icon {
+  margin-bottom: 1rem;
+}
+
+.report-list--empty .empty-state__heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  margin: 0 0 0.5rem;
+}
+
+.report-list--empty .empty-state__text {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  margin: 0 0 1.25rem;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.empty-state__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--color-green-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.empty-state__cta:hover {
+  background: var(--color-green-700);
 }
 
 .report-list__upload-link {
@@ -3520,4 +3602,82 @@ button.chat-send-button[type="submit"]:disabled {
     border-left: none;
     border-right: none;
   }
+}
+
+/* =========================
+   Compare Page — Empty State
+   ========================= */
+
+.compare-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.compare-page__empty .empty-state__icon {
+  margin-bottom: 1rem;
+}
+
+.compare-page__empty .empty-state__heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  margin: 0 0 0.5rem;
+}
+
+.compare-page__empty .empty-state__text {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  margin: 0 0 1.25rem;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* =========================
+   Dashboard — Welcome Banner
+   ========================= */
+
+.dashboard-welcome-banner {
+  background: linear-gradient(135deg, var(--color-green-50), var(--color-green-100));
+  border: 1px solid var(--color-green-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.dashboard-welcome-banner__heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-green-800);
+  margin: 0 0 0.5rem;
+}
+
+.dashboard-welcome-banner__text {
+  font-size: 0.9rem;
+  color: var(--color-green-700);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.dashboard-welcome-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--color-green-600);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.dashboard-welcome-banner__cta:hover {
+  background: var(--color-green-700);
 }

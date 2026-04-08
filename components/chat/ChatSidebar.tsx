@@ -173,7 +173,16 @@ export function ChatSidebar({
 
           {!isLoading && sessions.length === 0 && (
             <div className="chat-sidebar__empty">
-              No conversations yet. Start a new chat!
+              <div className="chat-sidebar__empty-icon" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M38 30a2 2 0 01-2 2H14l-6 6V14a2 2 0 012-2h26a2 2 0 012 2v16z" fill="#dcfce7" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="18" cy="22" r="1.5" fill="#16a34a"/>
+                  <circle cx="24" cy="22" r="1.5" fill="#16a34a"/>
+                  <circle cx="30" cy="22" r="1.5" fill="#16a34a"/>
+                </svg>
+              </div>
+              <div className="chat-sidebar__empty-heading">No conversations yet</div>
+              <div className="chat-sidebar__empty-text">Start a chat to ask about your health</div>
             </div>
           )}
 

@@ -95,9 +95,20 @@ export default function ReportList() {
   if (reports.length === 0) {
     return (
       <div className="report-list report-list--empty">
-        <p>No reports yet.</p>
-        <Link href="/upload" className="report-list__upload-link">
-          Upload your first medical report to get started
+        <div className="empty-state__icon" aria-hidden="true">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="14" y="8" width="36" height="48" rx="4" fill="#dcfce7" stroke="#16a34a" strokeWidth="2"/>
+            <path d="M24 24h16M24 32h16M24 40h10" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
+            <circle cx="44" cy="44" r="10" fill="#f0fdf4" stroke="#16a34a" strokeWidth="2"/>
+            <path d="M41 44l2 2 4-4" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <h3 className="empty-state__heading">No reports yet</h3>
+        <p className="empty-state__text">
+          Upload your first medical report to get started with health insights
+        </p>
+        <Link href="/upload" className="empty-state__cta">
+          Upload Report
         </Link>
       </div>
     );
