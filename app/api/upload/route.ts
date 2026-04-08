@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   validateFile,
+  validateFileContent,
   uploadToStorage,
   getFileType,
 } from "@/lib/supabase/storage";
@@ -45,6 +46,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: validation.error },
       { status: validation.statusCode }
+    );
+  }
+
+  // Validate file content matches declared MIME type (magic bytes check)
+  const contentValid = await validateFileContent(file);
+  if (!contentValid) {
+    return NextResponse.json(
+      { error: "File content does not match its declared type. Please upload a valid PDF, PNG, or JPG file." },
+      { status: 400 }
     );
   }
 

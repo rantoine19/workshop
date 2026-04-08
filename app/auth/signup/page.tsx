@@ -5,10 +5,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Logo from "@/components/ui/Logo";
 
+/** Validate password meets complexity requirements. */
+function validatePassword(pw: string): string | null {
+  if (pw.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(pw)) return "Password must include at least one uppercase letter.";
+  if (!/[0-9]/.test(pw)) return "Password must include at least one number.";
+  return null;
+}
+
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -16,7 +25,16 @@ export default function SignupPage() {
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setPasswordError(null);
     setLoading(true);
+
+    // Client-side password complexity validation
+    const pwError = validatePassword(password);
+    if (pwError) {
+      setPasswordError(pwError);
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -63,11 +81,15 @@ export default function SignupPage() {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 6 characters"
-            minLength={6}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (passwordError) setPasswordError(validatePassword(e.target.value));
+            }}
+            placeholder="At least 8 characters"
+            minLength={8}
             required
           />
+          {passwordError && <div className="error-message" style={{ marginTop: "0.25rem", fontSize: "0.875rem" }}>{passwordError}</div>}
         </div>
 
         {error && <div className="error-message">{error}</div>}

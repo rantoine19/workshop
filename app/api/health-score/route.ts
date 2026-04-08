@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { calculateHealthScore } from "@/lib/health/health-score";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 /**
@@ -10,7 +11,7 @@ import { NextResponse } from "next/server";
  *
  * Implements #109 — Dashboard health score.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
 
   // Verify authentication
@@ -66,6 +67,15 @@ export async function GET() {
   }));
 
   const result = calculateHealthScore(biomarkers);
+
+  // Audit log: health score view (fire-and-forget)
+  logAuditEvent({
+    userId: user.id,
+    action: "report.view",
+    resourceType: "report",
+    resourceId: latestReport.id,
+    ipAddress: getClientIp(request),
+  });
 
   return NextResponse.json(
     {

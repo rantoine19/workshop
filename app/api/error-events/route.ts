@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { parseSentryEnvelope, type ErrorInfo } from "./parse";
 
 /** Strip backtick sequences and newlines to prevent Markdown injection. */
@@ -93,6 +94,15 @@ ${sanitizeCodeBlock(errorInfo.stacktrace)}
 }
 
 export async function POST(request: NextRequest) {
+  // Verify authentication — prevent unauthenticated issue creation
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.text();
     const errorInfo = parseSentryEnvelope(body);
