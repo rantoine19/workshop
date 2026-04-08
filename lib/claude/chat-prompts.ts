@@ -27,6 +27,64 @@ This is something your doctor will definitely want to talk about soon. Want me t
 EXAMPLE BAD RESPONSE (too long, not interactive):
 Do NOT list all results in one message. Do NOT write more than a short paragraph. Do NOT skip the follow-up question.`;
 
+function calculateAge(dateOfBirth: string): number {
+  const birth = new Date(dateOfBirth);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
+
+export function buildHealthContext(profile: {
+  gender?: string | null;
+  date_of_birth?: string | null;
+  height_inches?: number | null;
+  known_conditions?: string[] | null;
+  medications?: string | null;
+  smoking_status?: string | null;
+  family_history?: string[] | null;
+  activity_level?: string | null;
+  sleep_hours?: string | null;
+}): string {
+  const parts: string[] = [];
+
+  if (profile.gender) parts.push(`Gender: ${profile.gender}`);
+  if (profile.date_of_birth) {
+    const age = calculateAge(profile.date_of_birth);
+    parts.push(`Age: ${age}`);
+  }
+  if (profile.height_inches) {
+    const feet = Math.floor(profile.height_inches / 12);
+    const inches = profile.height_inches % 12;
+    parts.push(`Height: ${feet}'${inches}"`);
+  }
+  if (profile.known_conditions?.length) {
+    parts.push(`Known conditions: ${profile.known_conditions.join(", ")}`);
+  }
+  if (profile.medications) {
+    parts.push(`Medications: ${profile.medications}`);
+  }
+  if (profile.smoking_status && profile.smoking_status !== "none") {
+    parts.push(`Smoking: ${profile.smoking_status}`);
+  }
+  if (profile.family_history?.length) {
+    parts.push(`Family history: ${profile.family_history.join(", ")}`);
+  }
+  if (profile.activity_level) {
+    parts.push(`Activity: ${profile.activity_level}`);
+  }
+  if (profile.sleep_hours) {
+    parts.push(`Sleep: ${profile.sleep_hours}`);
+  }
+
+  if (parts.length === 0) return "";
+
+  return `Patient health profile:\n${parts.join("\n")}\n\nUse this information to personalize your responses. For example, if the patient has diabetes, pay extra attention to glucose and A1C values.`;
+}
+
 export function buildReportContext(parsedResult: {
   biomarkers: Array<{
     name: string;

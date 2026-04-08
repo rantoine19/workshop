@@ -5,13 +5,56 @@ import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
 import Avatar from "@/components/ui/Avatar";
 
+const CONDITIONS_OPTIONS = [
+  "Diabetes",
+  "Hypertension",
+  "Heart Disease",
+  "Thyroid Disorder",
+  "Kidney Disease",
+  "High Cholesterol",
+  "Asthma/COPD",
+  "None",
+];
+
+const FAMILY_HISTORY_OPTIONS = [
+  "Heart Disease",
+  "Diabetes",
+  "Cancer",
+  "High Blood Pressure",
+  "Stroke",
+  "None",
+];
+
 interface ProfileData {
   id: string;
   display_name: string | null;
   date_of_birth: string | null;
   gender: string | null;
   avatar_url: string | null;
+  height_inches: number | null;
+  known_conditions: string[];
+  medications: string | null;
+  smoking_status: string | null;
+  family_history: string[];
+  activity_level: string | null;
+  sleep_hours: string | null;
   updated_at: string | null;
+}
+
+function computeCompletion(profile: ProfileData): number {
+  const fields = [
+    profile.display_name,
+    profile.date_of_birth,
+    profile.gender,
+    profile.known_conditions?.length ? profile.known_conditions : null,
+    profile.medications,
+    profile.smoking_status,
+    profile.family_history?.length ? profile.family_history : null,
+    profile.activity_level,
+    profile.sleep_hours,
+  ];
+  const filled = fields.filter((f) => f !== null && f !== undefined).length;
+  return Math.round((filled / fields.length) * 100);
 }
 
 export default function ProfilePage() {
@@ -20,6 +63,12 @@ export default function ProfilePage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [knownConditions, setKnownConditions] = useState<string[]>([]);
+  const [medications, setMedications] = useState("");
+  const [smokingStatus, setSmokingStatus] = useState("");
+  const [familyHistory, setFamilyHistory] = useState<string[]>([]);
+  const [activityLevel, setActivityLevel] = useState("");
+  const [sleepHours, setSleepHours] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -39,6 +88,12 @@ export default function ProfilePage() {
       setDateOfBirth(data.profile.date_of_birth || "");
       setGender(data.profile.gender || "");
       setAvatarUrl(data.profile.avatar_url || null);
+      setKnownConditions(data.profile.known_conditions || []);
+      setMedications(data.profile.medications || "");
+      setSmokingStatus(data.profile.smoking_status || "");
+      setFamilyHistory(data.profile.family_history || []);
+      setActivityLevel(data.profile.activity_level || "");
+      setSleepHours(data.profile.sleep_hours || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
@@ -121,6 +176,30 @@ export default function ProfilePage() {
     }
   };
 
+  const handleConditionToggle = (condition: string) => {
+    setKnownConditions((prev) => {
+      if (condition === "None") {
+        return prev.includes("None") ? [] : ["None"];
+      }
+      const without = prev.filter((c) => c !== "None");
+      return without.includes(condition)
+        ? without.filter((c) => c !== condition)
+        : [...without, condition];
+    });
+  };
+
+  const handleFamilyHistoryToggle = (item: string) => {
+    setFamilyHistory((prev) => {
+      if (item === "None") {
+        return prev.includes("None") ? [] : ["None"];
+      }
+      const without = prev.filter((f) => f !== "None");
+      return without.includes(item)
+        ? without.filter((f) => f !== item)
+        : [...without, item];
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -135,6 +214,12 @@ export default function ProfilePage() {
           display_name: displayName || null,
           date_of_birth: dateOfBirth || null,
           gender: gender || null,
+          known_conditions: knownConditions,
+          medications: medications || null,
+          smoking_status: smokingStatus || null,
+          family_history: familyHistory,
+          activity_level: activityLevel || null,
+          sleep_hours: sleepHours || null,
         }),
       });
 
@@ -154,6 +239,19 @@ export default function ProfilePage() {
     }
   };
 
+  const completion = profile ? computeCompletion({
+    ...profile,
+    display_name: displayName || null,
+    date_of_birth: dateOfBirth || null,
+    gender: gender || null,
+    known_conditions: knownConditions,
+    medications: medications || null,
+    smoking_status: smokingStatus || null,
+    family_history: familyHistory,
+    activity_level: activityLevel || null,
+    sleep_hours: sleepHours || null,
+  }) : 0;
+
   if (loading) {
     return (
       <div className="profile-page profile-page--loading">
@@ -169,6 +267,15 @@ export default function ProfilePage() {
         <NavHeader backLabel="Dashboard" />
         <h1>Your Profile</h1>
         <p>Manage your personal information. This helps us personalize your health explanations.</p>
+      </div>
+
+      <div className="profile-completion" role="progressbar" aria-valuenow={completion} aria-valuemin={0} aria-valuemax={100}>
+        <div className="profile-completion__label">
+          Complete your health profile for more personalized insights — {completion}% complete
+        </div>
+        <div className="profile-completion__track">
+          <div className="profile-completion__bar" style={{ width: `${completion}%` }} />
+        </div>
       </div>
 
       {error && (
@@ -260,6 +367,144 @@ export default function ProfilePage() {
           <span className="profile-page__hint">
             Some lab reference ranges differ by gender.
           </span>
+        </div>
+
+        {/* Health Background Section */}
+        <div className="profile-section">
+          <h2 className="profile-section__heading">Health Background</h2>
+          <p className="profile-section__description">
+            Helps personalize your experience. All fields are optional.
+          </p>
+
+          <div className="profile-page__field">
+            <label>Known Conditions</label>
+            <div className="profile-checkbox-group">
+              {CONDITIONS_OPTIONS.map((condition) => (
+                <label key={condition} className="profile-checkbox-group__item">
+                  <input
+                    type="checkbox"
+                    checked={knownConditions.includes(condition)}
+                    onChange={() => handleConditionToggle(condition)}
+                  />
+                  <span>{condition}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="profile-page__field">
+            <label htmlFor="medications">Current Medications</label>
+            <textarea
+              id="medications"
+              value={medications}
+              onChange={(e) => setMedications(e.target.value)}
+              placeholder="e.g., Metformin, Lisinopril, Atorvastatin"
+              maxLength={1000}
+              rows={3}
+              className="profile-page__textarea"
+            />
+            <span className="profile-page__hint">
+              Optional. Medications can affect lab values.
+            </span>
+          </div>
+
+          <div className="profile-page__field">
+            <label>Smoking Status</label>
+            <div className="profile-radio-group">
+              {[
+                { value: "none", label: "None" },
+                { value: "occasionally", label: "Occasionally" },
+                { value: "daily", label: "Daily" },
+              ].map((option) => (
+                <label key={option.value} className="profile-radio-group__item">
+                  <input
+                    type="radio"
+                    name="smoking_status"
+                    value={option.value}
+                    checked={smokingStatus === option.value}
+                    onChange={(e) => setSmokingStatus(e.target.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Lifestyle Section */}
+        <div className="profile-section">
+          <h2 className="profile-section__heading">Lifestyle</h2>
+          <p className="profile-section__description">
+            Lifestyle factors influence reference ranges and risk interpretation.
+          </p>
+
+          <div className="profile-page__field">
+            <label>Activity Level</label>
+            <div className="profile-radio-group">
+              {[
+                { value: "sedentary", label: "Sedentary" },
+                { value: "light", label: "Light" },
+                { value: "moderate", label: "Moderate" },
+                { value: "very_active", label: "Very Active" },
+              ].map((option) => (
+                <label key={option.value} className="profile-radio-group__item">
+                  <input
+                    type="radio"
+                    name="activity_level"
+                    value={option.value}
+                    checked={activityLevel === option.value}
+                    onChange={(e) => setActivityLevel(e.target.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="profile-page__field">
+            <label>Sleep</label>
+            <div className="profile-radio-group">
+              {[
+                { value: "7plus", label: "7+ hours" },
+                { value: "6", label: "6 hours" },
+                { value: "5_or_less", label: "5 hours or less" },
+              ].map((option) => (
+                <label key={option.value} className="profile-radio-group__item">
+                  <input
+                    type="radio"
+                    name="sleep_hours"
+                    value={option.value}
+                    checked={sleepHours === option.value}
+                    onChange={(e) => setSleepHours(e.target.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Family History Section */}
+        <div className="profile-section">
+          <h2 className="profile-section__heading">Family History</h2>
+          <p className="profile-section__description">
+            Family history helps assess health risks. Select conditions that run in your family.
+          </p>
+
+          <div className="profile-page__field">
+            <div className="profile-checkbox-group">
+              {FAMILY_HISTORY_OPTIONS.map((item) => (
+                <label key={item} className="profile-checkbox-group__item">
+                  <input
+                    type="checkbox"
+                    checked={familyHistory.includes(item)}
+                    onChange={() => handleFamilyHistoryToggle(item)}
+                  />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
         <button

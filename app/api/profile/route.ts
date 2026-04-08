@@ -1,6 +1,31 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+const VALID_SMOKING_STATUS = ["none", "occasionally", "daily"];
+const VALID_ACTIVITY_LEVEL = ["sedentary", "light", "moderate", "very_active"];
+const VALID_SLEEP_HOURS = ["7plus", "6", "5_or_less"];
+const VALID_CONDITIONS = [
+  "Diabetes",
+  "Hypertension",
+  "Heart Disease",
+  "Thyroid Disorder",
+  "Kidney Disease",
+  "High Cholesterol",
+  "Asthma/COPD",
+  "None",
+];
+const VALID_FAMILY_HISTORY = [
+  "Heart Disease",
+  "Diabetes",
+  "Cancer",
+  "High Blood Pressure",
+  "Stroke",
+  "None",
+];
+
+const PROFILE_SELECT =
+  "id, display_name, date_of_birth, gender, avatar_url, height_inches, known_conditions, medications, smoking_status, family_history, activity_level, sleep_hours, updated_at";
+
 export async function GET() {
   const supabase = await createClient();
 
@@ -15,7 +40,7 @@ export async function GET() {
   // Fetch profile — RLS ensures only own profile is accessible
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, display_name, date_of_birth, gender, avatar_url, height_inches, updated_at")
+    .select(PROFILE_SELECT)
     .eq("id", user.id)
     .single();
 
@@ -36,6 +61,12 @@ export async function GET() {
         gender: null,
         avatar_url: null,
         height_inches: null,
+        known_conditions: [],
+        medications: null,
+        smoking_status: null,
+        family_history: [],
+        activity_level: null,
+        sleep_hours: null,
         updated_at: null,
       },
     },
@@ -60,6 +91,12 @@ export async function PUT(request: Request) {
     date_of_birth?: string;
     gender?: string;
     height_inches?: number | null;
+    known_conditions?: string[];
+    medications?: string | null;
+    smoking_status?: string | null;
+    family_history?: string[];
+    activity_level?: string | null;
+    sleep_hours?: string | null;
   };
   try {
     body = await request.json();
@@ -137,6 +174,82 @@ export async function PUT(request: Request) {
     }
   }
 
+  // Validate known_conditions
+  if (body.known_conditions !== undefined) {
+    if (!Array.isArray(body.known_conditions)) {
+      return NextResponse.json(
+        { error: "known_conditions must be an array" },
+        { status: 400 }
+      );
+    }
+    for (const c of body.known_conditions) {
+      if (!VALID_CONDITIONS.includes(c)) {
+        return NextResponse.json(
+          { error: `Invalid condition: ${c}. Must be one of: ${VALID_CONDITIONS.join(", ")}` },
+          { status: 400 }
+        );
+      }
+    }
+  }
+
+  // Validate medications (free text, optional)
+  if (body.medications !== undefined && body.medications !== null) {
+    if (typeof body.medications !== "string" || body.medications.length > 1000) {
+      return NextResponse.json(
+        { error: "medications must be a string under 1000 characters" },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Validate smoking_status
+  if (body.smoking_status !== undefined && body.smoking_status !== null) {
+    if (!VALID_SMOKING_STATUS.includes(body.smoking_status)) {
+      return NextResponse.json(
+        { error: `smoking_status must be one of: ${VALID_SMOKING_STATUS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Validate family_history
+  if (body.family_history !== undefined) {
+    if (!Array.isArray(body.family_history)) {
+      return NextResponse.json(
+        { error: "family_history must be an array" },
+        { status: 400 }
+      );
+    }
+    for (const f of body.family_history) {
+      if (!VALID_FAMILY_HISTORY.includes(f)) {
+        return NextResponse.json(
+          { error: `Invalid family history: ${f}. Must be one of: ${VALID_FAMILY_HISTORY.join(", ")}` },
+          { status: 400 }
+        );
+      }
+    }
+  }
+
+  // Validate activity_level
+  if (body.activity_level !== undefined && body.activity_level !== null) {
+    if (!VALID_ACTIVITY_LEVEL.includes(body.activity_level)) {
+      return NextResponse.json(
+        { error: `activity_level must be one of: ${VALID_ACTIVITY_LEVEL.join(", ")}` },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Validate sleep_hours
+  if (body.sleep_hours !== undefined && body.sleep_hours !== null) {
+    if (!VALID_SLEEP_HOURS.includes(body.sleep_hours)) {
+      return NextResponse.json(
+        { error: `sleep_hours must be one of: ${VALID_SLEEP_HOURS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+  }
+
   // Build update object — only include provided fields
   const updateData: Record<string, unknown> = {
     id: user.id,
@@ -155,12 +268,30 @@ export async function PUT(request: Request) {
   if (body.height_inches !== undefined) {
     updateData.height_inches = body.height_inches;
   }
+  if (body.known_conditions !== undefined) {
+    updateData.known_conditions = body.known_conditions;
+  }
+  if (body.medications !== undefined) {
+    updateData.medications = body.medications;
+  }
+  if (body.smoking_status !== undefined) {
+    updateData.smoking_status = body.smoking_status;
+  }
+  if (body.family_history !== undefined) {
+    updateData.family_history = body.family_history;
+  }
+  if (body.activity_level !== undefined) {
+    updateData.activity_level = body.activity_level;
+  }
+  if (body.sleep_hours !== undefined) {
+    updateData.sleep_hours = body.sleep_hours;
+  }
 
   // Upsert profile — creates if not exists, updates if exists
   const { data: profile, error } = await supabase
     .from("profiles")
     .upsert(updateData, { onConflict: "id" })
-    .select("id, display_name, date_of_birth, gender, avatar_url, height_inches, updated_at")
+    .select(PROFILE_SELECT)
     .single();
 
   if (error) {
