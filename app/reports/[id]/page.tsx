@@ -28,6 +28,7 @@ export default function ReportResultsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
 
   const fetchReport = useCallback(async () => {
     setLoading(true);
@@ -74,6 +75,30 @@ export default function ReportResultsPage() {
       setIsDeleting(false);
     }
   }, [reportId, router]);
+
+  const handleReanalyze = useCallback(async () => {
+    setIsReanalyzing(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ report_id: reportId }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Re-analysis failed");
+      }
+      // Reload report to show updated results
+      await fetchReport();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Re-analysis failed. Please try again."
+      );
+    } finally {
+      setIsReanalyzing(false);
+    }
+  }, [reportId, fetchReport]);
 
   useEffect(() => {
     fetchReport();
@@ -124,14 +149,24 @@ export default function ReportResultsPage() {
         <NavHeader backLabel="Dashboard" />
         <div className="report-results__title-row">
           <h1>{report.file_name}</h1>
-          <button
-            className="delete-btn delete-btn--danger"
-            onClick={() => setShowDeleteDialog(true)}
-            disabled={isDeleting}
-            aria-label="Delete report"
-          >
-            {isDeleting ? "Deleting..." : "Delete Report"}
-          </button>
+          <div className="report-results__header-actions">
+            <button
+              className="report-results__reanalyze-btn report-results__reanalyze-btn--sm"
+              onClick={handleReanalyze}
+              disabled={isReanalyzing}
+              aria-label="Re-analyze report"
+            >
+              {isReanalyzing ? "Analyzing..." : "Re-analyze"}
+            </button>
+            <button
+              className="delete-btn delete-btn--danger"
+              onClick={() => setShowDeleteDialog(true)}
+              disabled={isDeleting}
+              aria-label="Delete report"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
         </div>
         <p className="report-results__meta">
           Uploaded {new Date(report.created_at).toLocaleDateString("en-US", {
@@ -175,12 +210,21 @@ export default function ReportResultsPage() {
         <div className="report-results__failed" role="alert">
           <h2>Something went wrong</h2>
           <p>
-            We were unable to analyze this report. Please try uploading it
-            again or contact support if the problem persists.
+            We were unable to analyze this report. You can try again or
+            upload a new copy.
           </p>
-          <Link href="/upload" className="report-results__upload-link">
-            Upload Again
-          </Link>
+          <div className="report-results__failed-actions">
+            <button
+              onClick={handleReanalyze}
+              disabled={isReanalyzing}
+              className="report-results__reanalyze-btn"
+            >
+              {isReanalyzing ? "Analyzing..." : "Try Again"}
+            </button>
+            <Link href="/upload" className="report-results__upload-link">
+              Upload New Report
+            </Link>
+          </div>
         </div>
       )}
 
