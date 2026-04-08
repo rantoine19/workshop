@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getClaudeClient } from "@/lib/claude/client";
-import { CHAT_SYSTEM_PROMPT, buildReportContext } from "@/lib/claude/chat-prompts";
+import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext } from "@/lib/claude/chat-prompts";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
@@ -90,6 +90,15 @@ export async function POST(request: Request) {
     sessionId = newSession.id;
   }
 
+  // Load health profile context
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("known_conditions, medications, smoking_status, family_history, activity_level, sleep_hours, gender, date_of_birth, height_inches")
+    .eq("id", user.id)
+    .single();
+
+  const healthContext = profileData ? buildHealthContext(profileData) : "";
+
   // Load report context only for the specific report_id.
   // Each chat session is tied to one report — results may differ between reports.
   let reportContext = "";
@@ -118,9 +127,13 @@ export async function POST(request: Request) {
     .limit(MAX_HISTORY_MESSAGES);
 
   // Build messages for Claude
-  const systemPrompt = reportContext
-    ? `${CHAT_SYSTEM_PROMPT}\n\n${reportContext}`
-    : CHAT_SYSTEM_PROMPT;
+  let systemPrompt = CHAT_SYSTEM_PROMPT;
+  if (healthContext) {
+    systemPrompt += `\n\n${healthContext}`;
+  }
+  if (reportContext) {
+    systemPrompt += `\n\n${reportContext}`;
+  }
 
   const messages = [
     ...(history || []).map((msg) => ({

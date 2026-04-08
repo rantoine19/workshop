@@ -1691,6 +1691,127 @@ button.chat-send-button[type="submit"]:disabled {
   text-align: center;
 }
 
+.profile-page__textarea {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  color: var(--color-gray-700);
+  background: white;
+  resize: vertical;
+  font-family: inherit;
+  min-height: 70px;
+}
+
+.profile-page__textarea:focus {
+  outline: none;
+  border-color: var(--color-green-500);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+/* ── Profile Completion Progress ─────────────────────────── */
+
+.profile-completion {
+  background: var(--color-green-50);
+  border: 1px solid var(--color-green-200);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-completion__label {
+  font-size: 0.85rem;
+  color: var(--color-green-800);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.profile-completion__track {
+  height: 8px;
+  background: var(--color-green-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.profile-completion__bar {
+  height: 100%;
+  background: var(--color-green-500);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* ── Profile Sections ────────────────────────────────────── */
+
+.profile-section {
+  background: var(--color-gray-50, #f9fafb);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-section__heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.profile-section__description {
+  font-size: 0.85rem;
+  color: var(--color-gray-500);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Checkbox & Radio Groups ─────────────────────────────── */
+
+.profile-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.profile-checkbox-group__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-gray-700);
+  cursor: pointer;
+}
+
+.profile-checkbox-group__item input[type="checkbox"] {
+  accent-color: var(--color-green-600);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.profile-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.profile-radio-group__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--color-gray-700);
+  cursor: pointer;
+}
+
+.profile-radio-group__item input[type="radio"] {
+  accent-color: var(--color-green-600);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 /* ── Avatar Component ────────────────────────────────────── */
 
 .avatar {
