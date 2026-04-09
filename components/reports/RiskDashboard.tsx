@@ -112,40 +112,64 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
     return order[a.flag] - order[b.flag];
   });
 
+  /** What this biomarker measures — plain language explanation */
+  function getDescription(name: string): string {
+    const desc: Record<string, string> = {
+      "Total Cholesterol": "A waxy substance in your blood. Your body needs it to build cells, but too much can clog arteries.",
+      "LDL Cholesterol": "Often called 'bad' cholesterol. High levels can build up in your arteries and increase heart disease risk.",
+      "HDL Cholesterol": "The 'good' cholesterol. It helps remove other forms of cholesterol from your bloodstream.",
+      "Triglycerides": "A type of fat in your blood. High levels can raise your risk for heart disease.",
+      "Glucose (Fasting)": "Your blood sugar level after not eating. High levels may indicate diabetes or pre-diabetes.",
+      "A1C": "Shows your average blood sugar over the past 2-3 months. Used to diagnose and monitor diabetes.",
+      "Hemoglobin A1C": "Shows your average blood sugar over the past 2-3 months. Used to diagnose and monitor diabetes.",
+      "Blood Pressure Systolic": "The pressure in your arteries when your heart beats. High levels strain your heart and blood vessels.",
+      "Blood Pressure Diastolic": "The pressure in your arteries between heartbeats. High levels increase risk of heart disease and stroke.",
+      "Resting Heart Rate": "How many times your heart beats per minute at rest. A lower rate usually means better heart fitness.",
+      "Hemoglobin": "A protein in red blood cells that carries oxygen. Low levels may mean anemia.",
+      "Hematocrit": "The percentage of your blood that is red blood cells. Helps detect anemia or dehydration.",
+      "White Blood Cell Count": "Your immune system's defenders. High or low counts can signal infection or immune issues.",
+      "Platelet Count": "Cells that help your blood clot. Too few can cause bleeding; too many can cause clots.",
+      "Creatinine": "A waste product filtered by your kidneys. High levels may mean your kidneys aren't working well.",
+      "BUN": "Blood urea nitrogen — another measure of kidney function. High levels can indicate kidney problems.",
+      "Sodium": "An electrolyte that helps control fluid balance and nerve function.",
+      "Potassium": "An electrolyte critical for heart rhythm and muscle function.",
+      "Calcium": "Important for bones, heart, muscles, and nerves.",
+      "TSH": "Thyroid-stimulating hormone. Controls your metabolism. Abnormal levels indicate thyroid issues.",
+      "ALT": "A liver enzyme. High levels can indicate liver damage or disease.",
+      "AST": "A liver enzyme. Elevated levels may suggest liver, heart, or muscle problems.",
+      "Vitamin D": "Essential for bone health and immune function. Many people are deficient.",
+      "Vitamin B12": "Important for nerve function and making red blood cells. Low levels cause fatigue.",
+      "Iron": "Needed to carry oxygen in your blood. Low iron causes anemia and fatigue.",
+      "Uric Acid": "A waste product. High levels can cause gout and kidney stones.",
+    };
+    return desc[name] || "A health marker measured in your lab work.";
+  }
+
+  /** What the specific value means for this person */
+  function getValueMeaning(flag: RiskFlagData): string {
+    const val = Number(flag.value);
+    const goalText = getGoalText(flag);
+
+    if (flag.flag === "green") {
+      return `Your result of ${val} is in the healthy range${goalText ? ` (goal: ${goalText})` : ""}. Great job — keep doing what you're doing!`;
+    }
+    if (flag.flag === "yellow") {
+      return `Your result of ${val} is borderline${goalText ? ` — the healthy range is ${goalText}` : ""}. This is worth mentioning to your doctor at your next visit.`;
+    }
+    return `Your result of ${val} is outside the healthy range${goalText ? ` (goal: ${goalText})` : ""}. Talk to your doctor about this — they can help you make a plan.`;
+  }
+
   function getGoalText(flag: RiskFlagData): string {
     if (flag.reference_low != null && flag.reference_high != null) {
       return `${flag.reference_low}-${flag.reference_high}`;
     }
     if (flag.reference_high != null) {
-      return `<${flag.reference_high}`;
+      return `below ${flag.reference_high}`;
     }
     if (flag.reference_low != null) {
-      return `>${flag.reference_low}`;
+      return `above ${flag.reference_low}`;
     }
     return "";
-  }
-
-  function getRangeText(flag: RiskFlagData): string {
-    if (flag.reference_low != null && flag.reference_high != null) {
-      return `Normal range: ${flag.reference_low} - ${flag.reference_high}`;
-    }
-    if (flag.reference_high != null) {
-      return `Normal: below ${flag.reference_high}`;
-    }
-    if (flag.reference_low != null) {
-      return `Normal: above ${flag.reference_low}`;
-    }
-    return "";
-  }
-
-  function getAdvice(flag: RiskFlagData): string {
-    if (flag.flag === "green") {
-      return "This value is within the normal range. Keep up the good work!";
-    }
-    if (flag.flag === "yellow") {
-      return "This value is borderline. It's worth discussing with your doctor at your next visit.";
-    }
-    return "This value needs attention. Please talk to your doctor about this result soon.";
   }
 
   return (
@@ -189,8 +213,6 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
         <div className="risk-card-grid">
           {sortedFlags.map((flag) => {
             const isExpanded = expandedId === flag.id;
-            const score = flag.flag === "green" ? 100 : flag.flag === "yellow" ? 70 : 30;
-            const goalText = getGoalText(flag);
             return (
               <button
                 key={flag.id}
@@ -198,52 +220,37 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
                 onClick={() => setExpandedId(isExpanded ? null : flag.id)}
                 aria-expanded={isExpanded}
               >
-                <div className="risk-card__top">
-                  <div className={`risk-card__ring risk-card__ring--${flag.flag}`}>
-                    <svg viewBox="0 0 36 36" className="risk-card__ring-svg">
-                      <path
-                        className="risk-card__ring-bg"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="#e5e7eb"
-                        strokeWidth="3"
-                      />
-                      <path
-                        className="risk-card__ring-fill"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        strokeWidth="3"
-                        strokeDasharray={`${score}, 100`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <span className="risk-card__score">{score}</span>
-                  </div>
-                  <div className="risk-card__info">
+                <div className="risk-card__header">
+                  <div className="risk-card__title-row">
                     <span className="risk-card__name">{flag.biomarker_name}</span>
-                    <span className={`risk-card__label risk-card__label--${flag.flag}`}>
+                    <span className={`risk-card__badge risk-card__badge--${flag.flag}`}>
                       {FLAG_LABELS[flag.flag]}
                     </span>
                   </div>
-                </div>
-                <div className="risk-card__bottom">
-                  <div className="risk-card__stat">
-                    <span className="risk-card__stat-label">You</span>
-                    <span className="risk-card__stat-value">{Number(flag.value).toLocaleString()}</span>
+                  <div className="risk-card__value-row">
+                    <span className={`risk-card__value risk-card__value--${flag.flag}`}>
+                      {Number(flag.value).toLocaleString()}
+                    </span>
+                    {getGoalText(flag) && (
+                      <span className="risk-card__goal">
+                        Goal: {getGoalText(flag)}
+                      </span>
+                    )}
                   </div>
-                  {goalText && (
-                    <div className="risk-card__stat">
-                      <span className="risk-card__stat-label">Goal</span>
-                      <span className="risk-card__stat-value">{goalText}</span>
-                    </div>
-                  )}
                 </div>
+                <p className="risk-card__description">
+                  {getDescription(flag.biomarker_name)}
+                </p>
                 {isExpanded && (
                   <div className="risk-card__details">
-                    <p className="risk-card__range">{getRangeText(flag)}</p>
-                    <p className="risk-card__advice">{getAdvice(flag)}</p>
+                    <p className="risk-card__meaning">
+                      {getValueMeaning(flag)}
+                    </p>
                   </div>
                 )}
+                <span className="risk-card__expand-hint">
+                  {isExpanded ? "Show less" : "What does this mean?"}
+                </span>
               </button>
             );
           })}
