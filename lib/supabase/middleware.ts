@@ -34,6 +34,31 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Server-side session age check (HIPAA defense-in-depth).
+  // Reject sessions older than 15 minutes since last activity,
+  // enforcing the same timeout as the client-side auto-logout.
+  const MAX_SESSION_AGE_MS = 15 * 60 * 1000; // 15 minutes
+  if (user) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session) {
+      const lastRefreshed = session.expires_at
+        ? session.expires_at * 1000 - 3600 * 1000 // expires_at minus default 1h TTL = approx last refresh
+        : 0;
+      const sessionAge = Date.now() - lastRefreshed;
+      if (sessionAge > MAX_SESSION_AGE_MS + 3600 * 1000) {
+        // Session is stale beyond the max age plus the Supabase TTL buffer —
+        // sign the user out and redirect to login.
+        await supabase.auth.signOut();
+        const url = request.nextUrl.clone();
+        url.pathname = "/auth/login";
+        url.searchParams.set("reason", "session_expired");
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
   // Redirect unauthenticated users to login (except public routes)
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||

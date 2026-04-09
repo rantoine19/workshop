@@ -5,6 +5,7 @@ import {
   SIMPLIFICATION_USER_PROMPT,
   formatBiomarkersForSimplification,
 } from "@/lib/claude/simplification-prompts";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 export interface SimplifiedBiomarker {
@@ -52,6 +53,15 @@ export async function GET(
   if (report.user_id !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  // Audit log: report summary view (fire-and-forget)
+  logAuditEvent({
+    userId: user.id,
+    action: "report.view",
+    resourceType: "report",
+    resourceId: reportId,
+    ipAddress: getClientIp(request),
+  });
 
   // Fetch parsed results for this report
   const { data: parsedResult, error: parsedError } = await supabase

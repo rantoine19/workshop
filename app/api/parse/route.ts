@@ -127,13 +127,27 @@ export async function POST(request: Request) {
       .select("biomarker_name, green_low, green_high, yellow_low, yellow_high, red_low, red_high, direction, source")
       .eq("user_id", user.id);
 
+    // Load user's gender from profile for sex-specific reference ranges
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("gender")
+      .eq("id", user.id)
+      .single();
+
+    const gender: "male" | "female" | undefined =
+      profile?.gender === "Male"
+        ? "male"
+        : profile?.gender === "Female"
+          ? "female"
+          : undefined;
+
     // Apply deterministic server-side flagging (fixes #87)
     // This overrides Claude's advisory flags with verified reference ranges.
     // Custom ranges take priority over defaults (#50).
     // Claude's flag is kept as fallback only for unrecognized biomarkers.
     const reflaggedBiomarkers = applyServerSideFlags(
       parsed.biomarkers,
-      undefined,
+      gender,
       customRanges ?? undefined
     );
     const reflaggedParsed = { ...parsed, biomarkers: reflaggedBiomarkers };

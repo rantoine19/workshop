@@ -11,6 +11,38 @@ const ALLOWED_TYPES = [
 
 export type AllowedFileType = (typeof ALLOWED_TYPES)[number];
 
+/**
+ * Validate file content by checking magic bytes (file signatures).
+ * This prevents MIME type spoofing by verifying actual file content.
+ */
+export async function validateFileContent(file: File): Promise<boolean> {
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  // PDF: starts with %PDF (0x25 0x50 0x44 0x46)
+  if (
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46
+  )
+    return true;
+
+  // JPEG: starts with 0xFF 0xD8 0xFF
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return true;
+
+  // PNG: starts with 0x89 0x50 0x4E 0x47
+  if (
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  )
+    return true;
+
+  return false;
+}
+
 export function validateFile(file: File): {
   valid: boolean;
   error?: string;

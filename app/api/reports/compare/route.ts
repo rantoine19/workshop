@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SYNONYM_INDEX } from "@/lib/health/biomarker-synonyms";
 import { flagBiomarker, type CustomRange } from "@/lib/health/flag-biomarker";
 import { calculateBiomarkerTrend, type TrendDirection } from "@/lib/health/trend";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 
 /** Maximum number of reports that can be compared at once. */
 const MAX_REPORTS = 5;
@@ -99,6 +100,17 @@ export async function GET(request: NextRequest) {
         { status: 422 }
       );
     }
+  }
+
+  // Audit log: report comparison view (fire-and-forget, one per report)
+  for (const report of reports) {
+    logAuditEvent({
+      userId: user.id,
+      action: "report.view",
+      resourceType: "report",
+      resourceId: report.id,
+      ipAddress: getClientIp(request),
+    });
   }
 
   // Fetch parsed results for all reports

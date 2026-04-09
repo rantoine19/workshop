@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -38,6 +39,15 @@ export async function GET(request: Request) {
   if (report.user_id !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  // Audit log: risk flags view (fire-and-forget)
+  logAuditEvent({
+    userId: user.id,
+    action: "report.view",
+    resourceType: "report",
+    resourceId: reportId,
+    ipAddress: getClientIp(request),
+  });
 
   // Fetch parsed result for this report
   const { data: parsedResult, error: parsedError } = await supabase
