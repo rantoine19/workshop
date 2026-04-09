@@ -207,7 +207,26 @@ export async function POST(request: Request) {
       }));
 
     if (riskFlags.length > 0) {
-      await supabase.from("risk_flags").insert(riskFlags);
+      console.log("[PARSE] Inserting", riskFlags.length, "risk flags for parsed_result:", parsedResult.id);
+      const { error: flagsError } = await supabase.from("risk_flags").insert(riskFlags);
+      if (flagsError) {
+        console.error("[PARSE] Failed to insert risk flags:", flagsError.message, "code:", flagsError.code);
+        // Try inserting one-by-one to find the problematic row
+        let inserted = 0;
+        for (const flag of riskFlags) {
+          const { error: singleError } = await supabase.from("risk_flags").insert(flag);
+          if (singleError) {
+            console.error("[PARSE] Failed single flag:", flag.biomarker_name, "value:", flag.value, "flag:", flag.flag, "error:", singleError.message);
+          } else {
+            inserted++;
+          }
+        }
+        console.log("[PARSE] Inserted", inserted, "of", riskFlags.length, "risk flags individually");
+      } else {
+        console.log("[PARSE] All", riskFlags.length, "risk flags inserted successfully");
+      }
+    } else {
+      console.log("[PARSE] No risk flags to insert (all biomarkers filtered out)");
     }
 
     // Update report status to 'parsed'
