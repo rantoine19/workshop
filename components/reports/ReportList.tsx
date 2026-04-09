@@ -133,43 +133,41 @@ export default function ReportList() {
           </Link>
         )}
       </div>
-      <div className="report-list__items">
+      <div className="report-list__grid">
         {reports.map((report) => (
           <Link
             key={report.id}
             href={`/reports/${report.id}`}
-            className="report-list__item"
+            className="report-list__card"
           >
-            <div className="report-list__item-icon" aria-hidden="true">
+            <div className="report-list__card-icon" aria-hidden="true">
               {report.file_type === "pdf" ? (
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6z" fill="#ef4444" opacity="0.15"/>
                   <path d="M6 2C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6z" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                   <path d="M14 2v6h6" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   <text x="12" y="17" textAnchor="middle" fill="#ef4444" fontSize="5" fontWeight="bold" fontFamily="system-ui">PDF</text>
                 </svg>
               ) : (
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="3" y="3" width="18" height="18" rx="2" fill="#3b82f6" opacity="0.15" stroke="#3b82f6" strokeWidth="1.5"/>
                   <circle cx="8.5" cy="8.5" r="2" fill="#3b82f6" opacity="0.5"/>
                   <path d="M21 15l-5-5L5 21" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               )}
             </div>
-            <div className="report-list__item-info">
-              <span className="report-list__item-name">
-                {report.file_name}
-              </span>
-              <span className="report-list__item-date">
-                {new Date(report.created_at).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
+            <span className="report-list__card-name">
+              {report.file_name}
+            </span>
+            <span className="report-list__card-date">
+              {new Date(report.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </span>
             <span
-              className={`report-list__item-status report-list__item-status--${report.status}`}
+              className={`report-list__card-status report-list__card-status--${report.status}`}
             >
               {statusLabel[report.status] || report.status}
             </span>
