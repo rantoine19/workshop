@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { Figtree, Noto_Sans } from "next/font/google";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import "./globals.css";
+
+const figtree = Figtree({ subsets: ["latin"], variable: "--font-heading" });
+const notoSans = Noto_Sans({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
   title: "HealthChat AI",
@@ -18,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${figtree.variable} ${notoSans.variable}`}>
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>
