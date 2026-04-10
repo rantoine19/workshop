@@ -204,6 +204,7 @@ export async function POST(request: Request) {
         reference_high: b.reference_high,
         flag: b.flag,
         trend: "unknown" as const,
+        confidence: b.confidence ?? 1.0,
       }));
 
     if (riskFlags.length > 0) {

@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   const { data: riskFlags, error: flagsError } = await supabase
     .from("risk_flags")
     .select(
-      "id, biomarker_name, value, reference_low, reference_high, flag, trend, created_at"
+      "id, biomarker_name, value, reference_low, reference_high, flag, trend, confidence, created_at"
     )
     .eq("parsed_result_id", parsedResult.id)
     .order("created_at", { ascending: true });

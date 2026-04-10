@@ -9,6 +9,7 @@ export interface ParsedBiomarker {
   reference_low: number | null;
   reference_high: number | null;
   flag: "green" | "yellow" | "red";
+  confidence: number;
 }
 
 export interface ParsedReportResult {
@@ -85,6 +86,12 @@ export async function parseReportWithClaude(
   if (typeof parsed.summary !== "string") {
     throw new Error("Invalid response: summary must be a string");
   }
+
+  // Default confidence to 1.0 for backward compatibility
+  parsed.biomarkers = parsed.biomarkers.map((b) => ({
+    ...b,
+    confidence: typeof b.confidence === "number" ? b.confidence : 1.0,
+  }));
 
   return parsed;
 }
