@@ -540,8 +540,8 @@ button[type="submit"]:disabled {
 .health-score__gauge {
   position: relative;
   width: 100%;
-  max-width: 340px;
-  margin-bottom: 0.5rem;
+  max-width: 380px;
+  margin-bottom: 0.25rem;
 }
 
 .health-score__gauge-svg {
@@ -550,38 +550,30 @@ button[type="submit"]:disabled {
   display: block;
 }
 
-.health-score__gauge-arc {
-  transition: stroke-dashoffset 0.8s ease;
-}
-
-.health-score__needle {
-  transition: all 0.6s ease;
-}
-
 .health-score__scale-label {
   font-size: 12px;
   fill: var(--color-gray-400);
   font-weight: 500;
 }
 
-/* Score number — overlaid on the gauge */
+/* Score number + label block — below gauge, not overlapping */
+.health-score__score-block {
+  text-align: center;
+  margin-top: -1.5rem;
+  margin-bottom: 1rem;
+}
+
 .health-score__number {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: 3.5rem;
+  font-weight: 800;
   line-height: 1;
   color: var(--color-gray-900);
 }
 
-/* Score label — just below the number */
 .health-score__label {
   font-size: 1.1rem;
   font-weight: 600;
-  margin-top: -0.25rem;
-  margin-bottom: 1rem;
+  margin-top: 0.25rem;
 }
 
 .health-score__label--exceptional {
