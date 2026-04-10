@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface HealthScoreData {
+export interface HealthScoreData {
   score: number;
   label: string;
   color: string;
@@ -14,6 +14,11 @@ interface HealthScoreData {
     total: number;
   };
   topConcerns: string[];
+  topConcernsDetailed?: Array<{
+    name: string;
+    value: string | number | null;
+    flag: string;
+  }>;
   tips: string[];
   reportId: string;
   reportName: string;
@@ -127,35 +132,59 @@ function CreditScoreGauge({ score, label }: { score: number; label: string }) {
   );
 }
 
-export function HealthScore() {
-  const [data, setData] = useState<HealthScoreData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+interface HealthScoreProps {
+  /** When true, renders a smaller version for the dashboard sidebar */
+  compact?: boolean;
+  /** Health score data passed from parent (avoids duplicate fetch) */
+  data?: HealthScoreData | null;
+  /** Loading state from parent */
+  loading?: boolean;
+  /** Error state from parent */
+  error?: boolean;
+}
+
+export function HealthScore({
+  compact = false,
+  data: externalData,
+  loading: externalLoading,
+  error: externalError,
+}: HealthScoreProps = {}) {
+  // Internal state for standalone usage (non-compact mode)
+  const [internalData, setInternalData] = useState<HealthScoreData | null>(null);
+  const [internalLoading, setInternalLoading] = useState(!compact);
+  const [internalError, setInternalError] = useState(false);
   const [showExplain, setShowExplain] = useState(false);
 
+  // Use external props when in compact mode, internal state otherwise
+  const data = compact ? externalData : internalData;
+  const loading = compact ? (externalLoading ?? false) : internalLoading;
+  const error = compact ? (externalError ?? false) : internalError;
+
   useEffect(() => {
+    if (compact) return; // Parent handles fetching in compact mode
+
     async function fetchHealthScore() {
       try {
         const res = await fetch("/api/health-score");
         if (!res.ok) {
-          setError(true);
+          setInternalError(true);
           return;
         }
         const json = await res.json();
-        setData(json.healthScore ?? null);
+        setInternalData(json.healthScore ?? null);
       } catch {
-        setError(true);
+        setInternalError(true);
       } finally {
-        setLoading(false);
+        setInternalLoading(false);
       }
     }
     fetchHealthScore();
-  }, []);
+  }, [compact]);
 
   // Loading skeleton
   if (loading) {
     return (
-      <div className="health-score health-score--loading">
+      <div className={`health-score health-score--loading ${compact ? "health-score--compact" : ""}`}>
         <div className="health-score__skeleton-gauge" />
         <div className="health-score__skeleton-text" />
         <div className="health-score__skeleton-bar" />
@@ -171,7 +200,7 @@ export function HealthScore() {
   // Empty state — no parsed reports
   if (!data) {
     return (
-      <div className="health-score health-score--empty">
+      <div className={`health-score health-score--empty ${compact ? "health-score--compact" : ""}`}>
         <div className="health-score__empty-icon">
           <svg
             width="40"
@@ -198,8 +227,30 @@ export function HealthScore() {
   }
 
   // Breakdown counts
-  const { green, yellow, red, total } = data.breakdown;
+  const { green, yellow, red } = data.breakdown;
 
+  // Compact mode: smaller gauge + score + label + breakdown pills
+  if (compact) {
+    return (
+      <div className="health-score health-score--credit health-score--compact db-card">
+        <h3 className="db-card__title">Health Credit Score</h3>
+        <CreditScoreGauge score={data.score} label={data.label} />
+        <div className="health-score__breakdown-summary">
+          <span className="health-score__breakdown-item health-score__breakdown-item--green">
+            {green}N
+          </span>
+          <span className="health-score__breakdown-item health-score__breakdown-item--yellow">
+            {yellow}B
+          </span>
+          <span className="health-score__breakdown-item health-score__breakdown-item--red">
+            {red}R
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Full mode (standalone page)
   return (
     <div className={`health-score health-score--credit`}>
       <h2 className="health-score__title">Health Credit Score</h2>
@@ -232,7 +283,7 @@ export function HealthScore() {
           {red} Needs Attention
         </span>
         <span className="health-score__breakdown-item health-score__breakdown-item--total">
-          {total} Total
+          {data.breakdown.total} Total
         </span>
       </div>
 

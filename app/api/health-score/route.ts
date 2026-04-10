@@ -60,6 +60,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ healthScore: null }, { status: 200 });
   }
 
+  // Fetch biomarker values for detailed concern info
+  const { data: biomarkerValues } = await supabase
+    .from("risk_flags")
+    .select("biomarker_name, flag, value")
+    .eq("parsed_result_id", parsedResult.id);
+
   // Map risk flags to the shape expected by calculateHealthScore
   const biomarkers = riskFlags.map((rf) => ({
     name: rf.biomarker_name,
@@ -67,6 +73,22 @@ export async function GET(request: Request) {
   }));
 
   const result = calculateHealthScore(biomarkers);
+
+  // Build detailed top concerns (top 5 non-green biomarkers with values)
+  const nonGreen = (biomarkerValues ?? [])
+    .filter((b) => b.flag === "red" || b.flag === "yellow")
+    .sort((a, b) => {
+      if (a.flag === "red" && b.flag !== "red") return -1;
+      if (a.flag !== "red" && b.flag === "red") return 1;
+      return 0;
+    })
+    .slice(0, 5);
+
+  const topConcernsDetailed = nonGreen.map((b) => ({
+    name: b.biomarker_name,
+    value: b.value,
+    flag: b.flag,
+  }));
 
   // Audit log: health score view (fire-and-forget)
   logAuditEvent({
@@ -81,6 +103,7 @@ export async function GET(request: Request) {
     {
       healthScore: {
         ...result,
+        topConcernsDetailed,
         reportId: latestReport.id,
         reportName: latestReport.original_filename,
         reportDate: latestReport.created_at,
