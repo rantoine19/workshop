@@ -128,9 +128,14 @@ export default function ReportList() {
       <div className="report-list__header">
         <h2>Your Reports</h2>
         {parsedReports.length >= 2 && (
-          <Link href="/reports/compare" className="report-list__compare-link">
-            Compare Reports
-          </Link>
+          <div className="report-list__header-links">
+            <Link href="/reports/trends" className="report-list__compare-link">
+              View Trends
+            </Link>
+            <Link href="/reports/compare" className="report-list__compare-link">
+              Compare Reports
+            </Link>
+          </div>
         )}
       </div>
       <div className="report-list__grid">
