@@ -23,7 +23,8 @@ Respond ONLY with valid JSON in this exact format:
       "flag": "string — 'green' if within range, 'yellow' if borderline, 'red' if outside range, 'unknown' if no range available. NOTE: this flag is advisory only; the server applies verified reference ranges after extraction"
     }
   ],
-  "summary": "string — 1-3 sentence plain-language summary of the report contents, written at a 5th grade reading level"
+  "summary": "string — 1-3 sentence plain-language summary of the report contents, written at a 5th grade reading level",
+  "report_date": "string or null — the date the lab test was performed or the report was issued, in YYYY-MM-DD format. Extract from the document content (look for collection date, test date, report date, or similar). Return null if no date found."
 }`;
 
 export const PARSE_REPORT_USER_PROMPT =

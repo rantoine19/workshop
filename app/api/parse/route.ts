@@ -229,10 +229,14 @@ export async function POST(request: Request) {
       console.log("[PARSE] No risk flags to insert (all biomarkers filtered out)");
     }
 
-    // Update report status to 'parsed'
+    // Update report status to 'parsed' and store extracted report_date
+    const reportUpdate: { status: string; report_date?: string } = { status: "parsed" };
+    if (parsed.report_date) {
+      reportUpdate.report_date = parsed.report_date;
+    }
     await supabase
       .from("reports")
-      .update({ status: "parsed" })
+      .update(reportUpdate)
       .eq("id", report.id);
 
     // Audit log: report parse (fire-and-forget)
