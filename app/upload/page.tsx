@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
 
@@ -18,7 +18,7 @@ export default function UploadPage() {
   const [reportId, setReportId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     setError(null);

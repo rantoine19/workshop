@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 
 export default function LoginPage() {
@@ -11,7 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -74,7 +75,7 @@ export default function LoginPage() {
       </form>
 
       <p className="auth-link">
-        Don&apos;t have an account? <a href="/auth/signup">Sign up</a>
+        Don&apos;t have an account? <Link href="/auth/signup">Sign up</Link>
       </p>
     </div>
   );
