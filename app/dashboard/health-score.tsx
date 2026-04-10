@@ -24,11 +24,11 @@ interface HealthScoreData {
  * Score range legend entries for the credit-score display.
  */
 const SCORE_RANGES = [
-  { min: 300, label: "Insufficiently Active", className: "insufficient" },
-  { min: 580, label: "Moderately Active", className: "moderate" },
-  { min: 670, label: "Active", className: "active" },
-  { min: 740, label: "Very Active", className: "very-active" },
-  { min: 800, label: "Exceptional", className: "exceptional" },
+  { min: 300, label: "Poor", className: "poor" },
+  { min: 580, label: "Fair", className: "fair" },
+  { min: 670, label: "Good", className: "good" },
+  { min: 740, label: "Very Good", className: "very-good" },
+  { min: 800, label: "Excellent", className: "excellent" },
 ];
 
 /**

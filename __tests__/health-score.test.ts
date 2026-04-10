@@ -17,8 +17,8 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(850);
-    expect(result.label).toBe("Exceptional");
-    expect(result.color).toBe("exceptional");
+    expect(result.label).toBe("Excellent");
+    expect(result.color).toBe("excellent");
     expect(result.breakdown.green).toBe(3);
     expect(result.breakdown.yellow).toBe(0);
     expect(result.breakdown.red).toBe(0);
@@ -37,8 +37,8 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(300);
-    expect(result.label).toBe("Insufficiently Active");
-    expect(result.color).toBe("insufficient");
+    expect(result.label).toBe("Poor");
+    expect(result.color).toBe("poor");
     expect(result.breakdown.red).toBe(3);
   });
 
@@ -53,8 +53,8 @@ describe("calculateHealthScore", () => {
     const result = calculateHealthScore(biomarkers);
     // 300 + 0.5 * 550 = 300 + 275 = 575
     expect(result.score).toBe(575);
-    expect(result.label).toBe("Insufficiently Active");
-    expect(result.color).toBe("insufficient");
+    expect(result.label).toBe("Poor");
+    expect(result.color).toBe("poor");
   });
 
   // ── Mixed flags ────────────────────────────────────────────────────
@@ -72,8 +72,8 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(644);
-    expect(result.label).toBe("Moderately Active");
-    expect(result.color).toBe("moderate");
+    expect(result.label).toBe("Fair");
+    expect(result.color).toBe("fair");
   });
 
   // ── Critical biomarker weighting ───────────────────────────────────
@@ -90,7 +90,7 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(483);
-    expect(result.label).toBe("Insufficiently Active");
+    expect(result.label).toBe("Poor");
   });
 
   it("weights critical biomarkers 2x (Blood Pressure Systolic)", () => {
@@ -105,7 +105,7 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(667);
-    expect(result.label).toBe("Moderately Active");
+    expect(result.label).toBe("Fair");
   });
 
   it("weights LDL Cholesterol as critical (2x)", () => {
@@ -144,11 +144,11 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(850);
-    expect(result.label).toBe("Exceptional");
-    expect(result.color).toBe("exceptional");
+    expect(result.label).toBe("Excellent");
+    expect(result.color).toBe("excellent");
   });
 
-  it("labels score 740-799 as Very Active", () => {
+  it("labels score 740-799 as Very Good", () => {
     // Need score in 740-799 range
     // 3 green + 1 yellow, all non-critical:
     // fraction = (3 + 0.5) / 4 = 0.875
@@ -161,8 +161,8 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(781);
-    expect(result.label).toBe("Very Active");
-    expect(result.color).toBe("very-active");
+    expect(result.label).toBe("Very Good");
+    expect(result.color).toBe("very-good");
   });
 
   it("labels score 670-739 as Active", () => {
@@ -177,11 +177,11 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(713);
-    expect(result.label).toBe("Active");
-    expect(result.color).toBe("active");
+    expect(result.label).toBe("Good");
+    expect(result.color).toBe("good");
   });
 
-  it("labels score 580-669 as Moderately Active", () => {
+  it("labels score 580-669 as Fair", () => {
     // 1 green + 1 yellow + 1 red, all non-critical:
     // fraction = (1 + 0.5 + 0) / 3 = 0.5
     // score = 300 + 0.5 * 550 = 575
@@ -192,13 +192,13 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(575);
-    // 575 < 580 → Insufficiently Active
+    // 575 < 580 → Poor
     // Let's use a different mix: 2 green + 1 yellow + 1 red = (2+0.5)/4 = 0.625
     // score = 300 + 0.625 * 550 = 644
     // That works.
   });
 
-  it("returns Moderately Active for score 644", () => {
+  it("returns Fair for score 644", () => {
     const biomarkers = [
       { name: "M1", flag: "green" as const },
       { name: "M2", flag: "green" as const },
@@ -207,11 +207,11 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(644);
-    expect(result.label).toBe("Moderately Active");
-    expect(result.color).toBe("moderate");
+    expect(result.label).toBe("Fair");
+    expect(result.color).toBe("fair");
   });
 
-  it("labels score below 580 as Insufficiently Active", () => {
+  it("labels score below 580 as Poor", () => {
     // 1 green + 2 red, all non-critical:
     // fraction = 1/3 = 0.333
     // score = 300 + 0.333 * 550 = 483
@@ -222,8 +222,8 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(483);
-    expect(result.label).toBe("Insufficiently Active");
-    expect(result.color).toBe("insufficient");
+    expect(result.label).toBe("Poor");
+    expect(result.color).toBe("poor");
   });
 
   // ── Top concerns extraction ────────────────────────────────────────
@@ -267,11 +267,11 @@ describe("calculateHealthScore", () => {
 
   // ── Empty biomarkers → 300 ─────────────────────────────────────────
 
-  it("returns score 300 with Insufficiently Active for empty biomarkers", () => {
+  it("returns score 300 with Poor for empty biomarkers", () => {
     const result = calculateHealthScore([]);
     expect(result.score).toBe(300);
-    expect(result.label).toBe("Insufficiently Active");
-    expect(result.color).toBe("insufficient");
+    expect(result.label).toBe("Poor");
+    expect(result.color).toBe("poor");
     expect(result.breakdown.total).toBe(0);
     expect(result.topConcerns).toEqual([]);
     expect(result.tips).toEqual([]);
@@ -312,7 +312,7 @@ describe("calculateHealthScore", () => {
     ];
     const result = calculateHealthScore(biomarkers);
     expect(result.score).toBe(740);
-    expect(result.label).toBe("Very Active");
+    expect(result.label).toBe("Very Good");
   });
 
   // ── Tips generation ────────────────────────────────────────────────

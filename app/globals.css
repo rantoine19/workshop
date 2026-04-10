@@ -576,19 +576,19 @@ button[type="submit"]:disabled {
   margin-top: 0.25rem;
 }
 
-.health-score__label--exceptional {
+.health-score__label--excellent {
   color: #15803d;
 }
-.health-score__label--very-active {
+.health-score__label--very-good {
   color: #22c55e;
 }
-.health-score__label--active {
+.health-score__label--good {
   color: #84cc16;
 }
-.health-score__label--moderately-active {
+.health-score__label--fair {
   color: #f97316;
 }
-.health-score__label--insufficiently-active {
+.health-score__label--poor {
   color: #ef4444;
 }
 
@@ -617,19 +617,19 @@ button[type="submit"]:disabled {
   flex-shrink: 0;
 }
 
-.health-score__legend-item--insufficient .health-score__legend-dot {
+.health-score__legend-item--poor .health-score__legend-dot {
   background: #ef4444;
 }
-.health-score__legend-item--moderate .health-score__legend-dot {
+.health-score__legend-item--fair .health-score__legend-dot {
   background: #f97316;
 }
-.health-score__legend-item--active .health-score__legend-dot {
+.health-score__legend-item--good .health-score__legend-dot {
   background: #84cc16;
 }
-.health-score__legend-item--very-active .health-score__legend-dot {
+.health-score__legend-item--very-good .health-score__legend-dot {
   background: #22c55e;
 }
-.health-score__legend-item--exceptional .health-score__legend-dot {
+.health-score__legend-item--excellent .health-score__legend-dot {
   background: #15803d;
 }
 
