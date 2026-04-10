@@ -37,10 +37,7 @@ export default async function DashboardPage() {
       </header>
 
       <section className="dashboard-welcome">
-        <h2>Welcome back!</h2>
-        <p>
-          Signed in as <strong>{user.email}</strong>
-        </p>
+        <h2>Welcome back, {profile.display_name}!</h2>
       </section>
 
       <HealthScore />

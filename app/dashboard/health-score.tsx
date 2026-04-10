@@ -202,6 +202,7 @@ export function HealthScore() {
 
   return (
     <div className={`health-score health-score--credit`}>
+      <h2 className="health-score__title">Health Credit Score</h2>
       {/* Semi-circular gauge */}
       <CreditScoreGauge score={data.score} label={data.label} />
 
