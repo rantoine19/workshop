@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 
 /** Validate password meets complexity requirements. */
@@ -20,7 +21,7 @@ export default function SignupPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -100,7 +101,7 @@ export default function SignupPage() {
       </form>
 
       <p className="auth-link">
-        Already have an account? <a href="/auth/login">Log in</a>
+        Already have an account? <Link href="/auth/login">Log in</Link>
       </p>
     </div>
   );
