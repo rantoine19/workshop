@@ -3,6 +3,9 @@ import {
   CHAT_DISCLAIMER,
   CONVERSATIONAL_STYLE,
 } from "./persona";
+import { generateActionItems, type FlaggedBiomarker, type UserProfile } from "@/lib/health/action-items";
+import { suggestRelatedTests } from "@/lib/health/related-tests";
+import { getBiomarkerKnowledge } from "@/lib/health/biomarker-knowledge";
 
 export const CHAT_SYSTEM_PROMPT = `${PERSONA_PREAMBLE}
 
@@ -135,6 +138,93 @@ export function buildMultiReportContext(reports: MultiReportData[]): string {
 
   return `Here are ALL of the patient's uploaded reports for context. Use the dates to track changes over time and provide date-aware insights.\n\n${combined}\n\nUse this data to answer the patient's questions. You can compare values across reports when relevant.`;
 }
+
+/**
+ * Build biomarker knowledge context for flagged values.
+ * Includes what affects each value, lifestyle tips, and food recommendations.
+ */
+export function buildBiomarkerKnowledgeContext(
+  biomarkers: Array<{ name: string; flag: string }>
+): string {
+  const flagged = biomarkers.filter(
+    (b) => b.flag === "yellow" || b.flag === "red"
+  );
+
+  if (flagged.length === 0) return "";
+
+  const sections: string[] = [];
+
+  for (const biomarker of flagged) {
+    const knowledge = getBiomarkerKnowledge(biomarker.name);
+    if (!knowledge) continue;
+
+    const lines = [
+      `${knowledge.name} (${biomarker.flag.toUpperCase()}):`,
+      `  What it measures: ${knowledge.whatItMeasures}`,
+      `  Why it matters: ${knowledge.whyItMatters}`,
+      `  Common causes: ${knowledge.commonCausesHigh.slice(0, 3).join(", ")}`,
+      `  Foods that help: ${knowledge.foodsThatHelp.slice(0, 4).join(", ")}`,
+      `  Exercise: ${knowledge.exerciseRecommendation}`,
+      `  When to worry: ${knowledge.whenToWorry}`,
+    ];
+
+    sections.push(lines.join("\n"));
+  }
+
+  if (sections.length === 0) return "";
+
+  return `BIOMARKER KNOWLEDGE (use this to explain what affects each value):
+${sections.join("\n\n")}`;
+}
+
+/**
+ * Build enriched context combining biomarker knowledge, action items,
+ * and related test suggestions for the chat system prompt.
+ */
+export function buildEnrichedContext(
+  biomarkers: Array<{ name: string; value: number; unit?: string; flag: string }>,
+  profile?: UserProfile | null
+): string {
+  const parts: string[] = [];
+
+  // 1. Biomarker knowledge for flagged values
+  const knowledgeCtx = buildBiomarkerKnowledgeContext(biomarkers);
+  if (knowledgeCtx) parts.push(knowledgeCtx);
+
+  // 2. Personalized action items
+  const flaggedBiomarkers: FlaggedBiomarker[] = biomarkers
+    .filter((b) => b.flag === "red" || b.flag === "yellow")
+    .map((b) => ({
+      name: b.name,
+      value: b.value,
+      unit: b.unit,
+      flag: b.flag as "green" | "yellow" | "red",
+    }));
+
+  const actionCtx = generateActionItems(flaggedBiomarkers, profile);
+  if (actionCtx) parts.push(actionCtx);
+
+  // 3. Related test suggestions
+  const testCtx = suggestRelatedTests(
+    biomarkers.map((b) => ({
+      name: b.name,
+      flag: b.flag as "green" | "yellow" | "red",
+    }))
+  );
+  if (testCtx) parts.push(testCtx);
+
+  if (parts.length === 0) return "";
+
+  return parts.join("\n\n") + "\n\n" + ENRICHED_CONTEXT_INSTRUCTIONS;
+}
+
+const ENRICHED_CONTEXT_INSTRUCTIONS = `ENRICHED CONTEXT INSTRUCTIONS:
+- You have access to detailed biomarker knowledge above. Use it to explain what affects each value.
+- Suggest specific lifestyle changes and foods based on the patient's results.
+- When appropriate, mention related tests they could ask their doctor about.
+- Give 2-3 specific actionable tips, not generic "talk to your doctor" advice.
+- Still keep responses short (2-3 sentences) and end with a follow-up question.
+- These suggestions are for general wellness. Always include the disclaimer.`;
 
 export function buildReportContext(parsedResult: {
   biomarkers: Array<{

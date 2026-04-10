@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getClaudeClient } from "@/lib/claude/client";
-import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext } from "@/lib/claude/chat-prompts";
+import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext, buildEnrichedContext } from "@/lib/claude/chat-prompts";
+import { lookupCondition } from "@/lib/health/nlm-api";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
@@ -174,6 +175,41 @@ export async function POST(request: Request) {
     .order("created_at", { ascending: true })
     .limit(MAX_HISTORY_MESSAGES);
 
+  // Build enriched context from biomarker knowledge base
+  let enrichedContext = "";
+  if (reportId) {
+    // Single-report: enrich from that report's biomarkers
+    const { data: enrichParsed } = await supabase
+      .from("parsed_results")
+      .select("biomarkers")
+      .eq("report_id", reportId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (enrichParsed?.biomarkers) {
+      const biomarkers = (enrichParsed.biomarkers as Array<{ name: string; value: number; unit: string; flag: string }>).map((b) => ({
+        name: b.name,
+        value: b.value,
+        unit: b.unit,
+        flag: b.flag,
+      }));
+      enrichedContext = buildEnrichedContext(biomarkers, profileData);
+    }
+  }
+
+  // NLM condition lookup: check if user is asking about a medical condition
+  let nlmContext = "";
+  const conditionMatch = userMessage.match(
+    /what (?:is|are|does)(?: a| an)? (.+?)(?:\?|$)/i
+  );
+  if (conditionMatch) {
+    const conditionResult = await lookupCondition(conditionMatch[1]);
+    if (conditionResult) {
+      nlmContext = conditionResult;
+    }
+  }
+
   // Build messages for Claude
   let systemPrompt = CHAT_SYSTEM_PROMPT;
   if (healthContext) {
@@ -181,6 +217,12 @@ export async function POST(request: Request) {
   }
   if (reportContext) {
     systemPrompt += `\n\n${reportContext}`;
+  }
+  if (enrichedContext) {
+    systemPrompt += `\n\n${enrichedContext}`;
+  }
+  if (nlmContext) {
+    systemPrompt += `\n\n${nlmContext}`;
   }
 
   const messages = [
