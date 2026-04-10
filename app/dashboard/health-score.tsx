@@ -14,15 +14,133 @@ interface HealthScoreData {
     total: number;
   };
   topConcerns: string[];
+  tips: string[];
   reportId: string;
   reportName: string;
   reportDate: string;
+}
+
+/**
+ * Score range legend entries for the credit-score display.
+ */
+const SCORE_RANGES = [
+  { min: 300, label: "Insufficiently Active", className: "insufficient" },
+  { min: 580, label: "Moderately Active", className: "moderate" },
+  { min: 670, label: "Active", className: "active" },
+  { min: 740, label: "Very Active", className: "very-active" },
+  { min: 800, label: "Exceptional", className: "exceptional" },
+];
+
+/**
+ * Semi-circular gauge SVG component that resembles a credit score meter.
+ *
+ * Draws a 180-degree arc from left to right with gradient color stops,
+ * a needle indicator, and the score number in the center.
+ */
+function CreditScoreGauge({ score, label }: { score: number; label: string }) {
+  // Gauge geometry: semi-circle arc
+  const cx = 150;
+  const cy = 130;
+  const radius = 110;
+  const strokeWidth = 20;
+
+  // Arc goes from 180deg (left) to 0deg (right) — a semi-circle
+  // Convert score (300-850) to an angle (180 to 0)
+  const normalizedScore = Math.max(300, Math.min(850, score));
+  const fraction = (normalizedScore - 300) / 550; // 0 to 1
+  const needleAngle = Math.PI * (1 - fraction); // PI (left) to 0 (right)
+
+  // Needle endpoint
+  const needleLength = radius - strokeWidth / 2 - 8;
+  const needleX = cx + needleLength * Math.cos(needleAngle);
+  const needleY = cy - needleLength * Math.sin(needleAngle);
+
+  // Semi-circle arc path (left to right)
+  const arcStartX = cx - radius;
+  const arcStartY = cy;
+  const arcEndX = cx + radius;
+  const arcEndY = cy;
+
+  // Background arc path
+  const bgArc = `M ${arcStartX} ${arcStartY} A ${radius} ${radius} 0 0 1 ${arcEndX} ${arcEndY}`;
+
+  // Colored progress arc — draws from left up to needle position
+  const progressEndX = cx + radius * Math.cos(needleAngle);
+  const progressEndY = cy - radius * Math.sin(needleAngle);
+  const largeArcFlag = fraction > 0.5 ? 1 : 0;
+  const progressArc = `M ${arcStartX} ${arcStartY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${progressEndX} ${progressEndY}`;
+
+  return (
+    <div className="health-score__gauge">
+      <svg
+        className="health-score__gauge-svg"
+        viewBox="0 0 300 160"
+        aria-label={`Health Credit Score: ${score} out of 850, rated ${label}`}
+        role="img"
+      >
+        {/* Gradient definition for the colored arc */}
+        <defs>
+          <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="30%" stopColor="#f97316" />
+            <stop offset="50%" stopColor="#84cc16" />
+            <stop offset="75%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#15803d" />
+          </linearGradient>
+        </defs>
+
+        {/* Background arc (gray) */}
+        <path
+          d={bgArc}
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+
+        {/* Colored arc up to the score position */}
+        <path
+          className="health-score__gauge-arc"
+          d={progressArc}
+          fill="none"
+          stroke="url(#gaugeGradient)"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+        />
+
+        {/* Needle */}
+        <line
+          className="health-score__needle"
+          x1={cx}
+          y1={cy}
+          x2={needleX}
+          y2={needleY}
+          stroke="#1f2937"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        {/* Needle center dot */}
+        <circle cx={cx} cy={cy} r="5" fill="#1f2937" />
+
+        {/* Scale labels at edges */}
+        <text x={arcStartX - 5} y={cy + 20} textAnchor="middle" className="health-score__scale-label">300</text>
+        <text x={arcEndX + 5} y={cy + 20} textAnchor="middle" className="health-score__scale-label">850</text>
+      </svg>
+
+      {/* Score number overlay — centered inside the arc */}
+      <div className="health-score__number">{score}</div>
+      <div className={`health-score__label health-score__label--${label.toLowerCase().replace(/\s+/g, "-")}`}>
+        {label}
+      </div>
+    </div>
+  );
 }
 
 export function HealthScore() {
   const [data, setData] = useState<HealthScoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [showExplain, setShowExplain] = useState(false);
 
   useEffect(() => {
     async function fetchHealthScore() {
@@ -79,7 +197,7 @@ export function HealthScore() {
           </svg>
         </div>
         <p className="health-score__empty-text">
-          Upload a report to see your health score
+          Upload a report to see your Health Credit Score
         </p>
         <Link href="/upload" className="health-score__empty-cta">
           Upload Report
@@ -88,109 +206,96 @@ export function HealthScore() {
     );
   }
 
-  // Calculate SVG circle properties for the gauge
-  const radius = 58;
-  const circumference = 2 * Math.PI * radius;
-  const progress = data.score / 100;
-  const dashOffset = circumference * (1 - progress);
-
-  // Breakdown bar percentages
-  const total = data.breakdown.total || 1;
-  const greenPct = (data.breakdown.green / total) * 100;
-  const yellowPct = (data.breakdown.yellow / total) * 100;
-  const redPct = (data.breakdown.red / total) * 100;
+  // Breakdown counts
+  const { green, yellow, red, total } = data.breakdown;
 
   return (
-    <div className={`health-score health-score--${data.color}`}>
-      <div className="health-score__main">
-        {/* Circular gauge */}
-        <div className="health-score__gauge">
-          <svg
-            className="health-score__gauge-svg"
-            viewBox="0 0 140 140"
-            aria-label={`Health score: ${data.score} out of 100, rated ${data.label}`}
-            role="img"
+    <div className={`health-score health-score--credit`}>
+      {/* Semi-circular gauge */}
+      <CreditScoreGauge score={data.score} label={data.label} />
+
+      {/* Score range legend */}
+      <div className="health-score__legend">
+        {SCORE_RANGES.map((range) => (
+          <div
+            key={range.min}
+            className={`health-score__legend-item health-score__legend-item--${range.className}`}
           >
-            {/* Background circle */}
-            <circle
-              className="health-score__gauge-bg"
-              cx="70"
-              cy="70"
-              r={radius}
-              fill="none"
-              strokeWidth="10"
-            />
-            {/* Progress circle */}
-            <circle
-              className="health-score__gauge-progress"
-              cx="70"
-              cy="70"
-              r={radius}
-              fill="none"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
-              transform="rotate(-90 70 70)"
-            />
-          </svg>
-          <div className="health-score__number">{data.score}</div>
-        </div>
-
-        <div className="health-score__details">
-          <div className="health-score__label">{data.label}</div>
-
-          {/* Breakdown bar */}
-          <div className="health-score__breakdown" aria-label="Biomarker distribution">
-            <div className="health-score__breakdown-bar">
-              {data.breakdown.green > 0 && (
-                <div
-                  className="health-score__breakdown-segment health-score__breakdown-segment--green"
-                  style={{ width: `${greenPct}%` }}
-                  title={`${data.breakdown.green} normal`}
-                />
-              )}
-              {data.breakdown.yellow > 0 && (
-                <div
-                  className="health-score__breakdown-segment health-score__breakdown-segment--yellow"
-                  style={{ width: `${yellowPct}%` }}
-                  title={`${data.breakdown.yellow} borderline`}
-                />
-              )}
-              {data.breakdown.red > 0 && (
-                <div
-                  className="health-score__breakdown-segment health-score__breakdown-segment--red"
-                  style={{ width: `${redPct}%` }}
-                  title={`${data.breakdown.red} flagged`}
-                />
-              )}
-            </div>
-            <div className="health-score__breakdown-legend">
-              <span className="health-score__legend-item health-score__legend-item--green">
-                {data.breakdown.green} normal
-              </span>
-              <span className="health-score__legend-item health-score__legend-item--yellow">
-                {data.breakdown.yellow} borderline
-              </span>
-              <span className="health-score__legend-item health-score__legend-item--red">
-                {data.breakdown.red} flagged
-              </span>
-            </div>
+            <span className="health-score__legend-dot" />
+            <span className="health-score__legend-min">{range.min}</span>
+            <span className="health-score__legend-label">{range.label}</span>
           </div>
-
-          {/* Top concerns */}
-          {data.topConcerns.length > 0 && (
-            <div className="health-score__concerns">
-              <span className="health-score__concerns-label">Top concerns:</span>
-              <ul className="health-score__concerns-list">
-                {data.topConcerns.map((concern) => (
-                  <li key={concern}>{concern}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        ))}
       </div>
+
+      {/* Breakdown summary */}
+      <div className="health-score__breakdown-summary">
+        <span className="health-score__breakdown-item health-score__breakdown-item--green">
+          {green} Normal
+        </span>
+        <span className="health-score__breakdown-item health-score__breakdown-item--yellow">
+          {yellow} Borderline
+        </span>
+        <span className="health-score__breakdown-item health-score__breakdown-item--red">
+          {red} Needs Attention
+        </span>
+        <span className="health-score__breakdown-item health-score__breakdown-item--total">
+          {total} Total
+        </span>
+      </div>
+
+      {/* Improvement tips */}
+      {data.tips && data.tips.length > 0 && (
+        <div className="health-score__tips">
+          <h4 className="health-score__tips-title">How to improve your score</h4>
+          <ul className="health-score__tips-list">
+            {data.tips.map((tip, i) => (
+              <li key={i}>{tip}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Expandable explanation */}
+      <button
+        className="health-score__explain-toggle"
+        onClick={() => setShowExplain(!showExplain)}
+        aria-expanded={showExplain}
+      >
+        How is my score calculated?
+        <svg
+          className={`health-score__explain-chevron ${showExplain ? "health-score__explain-chevron--open" : ""}`}
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M4 6l4 4 4-4" />
+        </svg>
+      </button>
+      {showExplain && (
+        <div className="health-score__explain">
+          <p>
+            Your Health Credit Score is calculated on a 300&ndash;850 scale, similar
+            to a financial credit score. Each biomarker from your lab report
+            contributes to your score:
+          </p>
+          <ul>
+            <li><strong>Normal (green)</strong> biomarkers earn full credit</li>
+            <li><strong>Borderline (yellow)</strong> biomarkers earn half credit</li>
+            <li><strong>Flagged (red)</strong> biomarkers earn no credit</li>
+          </ul>
+          <p>
+            Critical biomarkers like blood pressure, glucose, A1C, and cholesterol
+            are weighted 2x because of their clinical significance.
+          </p>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="health-score__footer">
@@ -201,8 +306,8 @@ export function HealthScore() {
           </Link>
         </p>
         <p className="health-score__disclaimer">
-          This score is for informational purposes only. Always consult your
-          doctor.
+          Your Health Credit Score is for informational purposes only and is not a
+          medical diagnosis. Always consult your doctor.
         </p>
       </div>
     </div>
