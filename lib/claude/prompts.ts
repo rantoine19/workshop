@@ -20,7 +20,8 @@ Respond ONLY with valid JSON in this exact format:
       "unit": "string — unit of measurement (e.g., mg/dL, mmol/L)",
       "reference_low": "number or null — lower bound of normal range",
       "reference_high": "number or null — upper bound of normal range",
-      "flag": "string — 'green' if within range, 'yellow' if borderline, 'red' if outside range, 'unknown' if no range available. NOTE: this flag is advisory only; the server applies verified reference ranges after extraction"
+      "flag": "string — 'green' if within range, 'yellow' if borderline, 'red' if outside range, 'unknown' if no range available. NOTE: this flag is advisory only; the server applies verified reference ranges after extraction",
+      "confidence": "number — 0.0 to 1.0 indicating how confident you are in this extraction. Use 1.0 for clearly printed values, 0.7-0.9 for partially visible or ambiguous values, below 0.7 for guesses or unclear text"
     }
   ],
   "summary": "string — 1-3 sentence plain-language summary of the report contents, written at a 5th grade reading level",

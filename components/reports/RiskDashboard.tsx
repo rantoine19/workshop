@@ -10,6 +10,7 @@ interface RiskFlagData {
   reference_high: number | null;
   flag: "green" | "yellow" | "red";
   trend: string;
+  confidence: number;
 }
 
 interface RiskSummary {
@@ -229,6 +230,9 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
                   </div>
                   <div className="risk-card__value-row">
                     <span className={`risk-card__value risk-card__value--${flag.flag}`}>
+                      {(flag.confidence ?? 1) < 0.7 && (
+                        <span className="risk-card__approximate" aria-label="Approximate value">~</span>
+                      )}
                       {Number(flag.value).toLocaleString()}
                     </span>
                     {getGoalText(flag) && (
@@ -237,6 +241,16 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
                       </span>
                     )}
                   </div>
+                  {(flag.confidence ?? 1) < 0.7 && (
+                    <div className="risk-card__confidence-warning" role="alert">
+                      Value may be inaccurate — verify against your report
+                    </div>
+                  )}
+                  {(flag.confidence ?? 1) >= 0.7 && (flag.confidence ?? 1) <= 0.9 && (
+                    <div className="risk-card__confidence-note">
+                      Approximate reading
+                    </div>
+                  )}
                 </div>
                 <p className="risk-card__description">
                   {getDescription(flag.biomarker_name)}

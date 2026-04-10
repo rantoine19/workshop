@@ -2215,6 +2215,37 @@ button.chat-send-button[type="submit"]:disabled {
   grid-column: span 2;
 }
 
+.risk-card__confidence-warning {
+  font-size: 0.75rem;
+  color: var(--color-orange-600);
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.risk-card__confidence-warning::before {
+  content: "\26A0";
+  font-size: 0.85rem;
+}
+
+.risk-card__confidence-note {
+  font-size: 0.7rem;
+  color: var(--color-gray-500);
+  font-style: italic;
+  margin-top: 0.125rem;
+}
+
+.risk-card__approximate {
+  font-weight: 600;
+  margin-right: 0.125rem;
+  opacity: 0.7;
+}
+
 @media (max-width: 768px) {
   .risk-card--expanded {
     grid-column: span 1;

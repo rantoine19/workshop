@@ -120,6 +120,7 @@ describe("Report date extraction", () => {
             reference_low: 70,
             reference_high: 100,
             flag: "green",
+            confidence: 1.0,
           },
         ],
         summary: "Normal blood work.",
