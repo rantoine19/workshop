@@ -536,6 +536,13 @@ button[type="submit"]:disabled {
   text-align: center;
 }
 
+.health-score__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin: 0 0 0.5rem 0;
+}
+
 /* Semi-circular gauge container */
 .health-score__gauge {
   position: relative;
