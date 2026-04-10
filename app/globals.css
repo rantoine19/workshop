@@ -540,8 +540,8 @@ button[type="submit"]:disabled {
 .health-score__gauge {
   position: relative;
   width: 100%;
-  max-width: 340px;
-  margin-bottom: 0.5rem;
+  max-width: 380px;
+  margin-bottom: 0.25rem;
 }
 
 .health-score__gauge-svg {
@@ -550,53 +550,45 @@ button[type="submit"]:disabled {
   display: block;
 }
 
-.health-score__gauge-arc {
-  transition: stroke-dashoffset 0.8s ease;
-}
-
-.health-score__needle {
-  transition: all 0.6s ease;
-}
-
 .health-score__scale-label {
   font-size: 12px;
   fill: var(--color-gray-400);
   font-weight: 500;
 }
 
-/* Score number — overlaid on the gauge */
+/* Score number + label block — below gauge, not overlapping */
+.health-score__score-block {
+  text-align: center;
+  margin-top: -1.5rem;
+  margin-bottom: 1rem;
+}
+
 .health-score__number {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 3rem;
-  font-weight: 700;
+  font-size: 3.5rem;
+  font-weight: 800;
   line-height: 1;
   color: var(--color-gray-900);
 }
 
-/* Score label — just below the number */
 .health-score__label {
   font-size: 1.1rem;
   font-weight: 600;
-  margin-top: -0.25rem;
-  margin-bottom: 1rem;
+  margin-top: 0.25rem;
 }
 
-.health-score__label--exceptional {
+.health-score__label--excellent {
   color: #15803d;
 }
-.health-score__label--very-active {
+.health-score__label--very-good {
   color: #22c55e;
 }
-.health-score__label--active {
+.health-score__label--good {
   color: #84cc16;
 }
-.health-score__label--moderately-active {
+.health-score__label--fair {
   color: #f97316;
 }
-.health-score__label--insufficiently-active {
+.health-score__label--poor {
   color: #ef4444;
 }
 
@@ -625,19 +617,19 @@ button[type="submit"]:disabled {
   flex-shrink: 0;
 }
 
-.health-score__legend-item--insufficient .health-score__legend-dot {
+.health-score__legend-item--poor .health-score__legend-dot {
   background: #ef4444;
 }
-.health-score__legend-item--moderate .health-score__legend-dot {
+.health-score__legend-item--fair .health-score__legend-dot {
   background: #f97316;
 }
-.health-score__legend-item--active .health-score__legend-dot {
+.health-score__legend-item--good .health-score__legend-dot {
   background: #84cc16;
 }
-.health-score__legend-item--very-active .health-score__legend-dot {
+.health-score__legend-item--very-good .health-score__legend-dot {
   background: #22c55e;
 }
-.health-score__legend-item--exceptional .health-score__legend-dot {
+.health-score__legend-item--excellent .health-score__legend-dot {
   background: #15803d;
 }
 

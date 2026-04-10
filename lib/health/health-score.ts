@@ -6,16 +6,16 @@
  * pressure, glucose, A1C, cholesterol) are weighted 2x.
  *
  * Score ranges:
- *   800-850  Exceptional       (bright green)
- *   740-799  Very Active       (green)
+ *   800-850  Excellent       (bright green)
+ *   740-799  Very Good       (green)
  *   670-739  Active            (light green)
- *   580-669  Moderately Active (orange)
- *   300-579  Insufficiently Active (red)
+ *   580-669  Fair (orange)
+ *   300-579  Poor (red)
  */
 
 export interface HealthScoreResult {
   score: number;          // 300-850
-  label: string;          // "Exceptional" | "Very Active" | "Active" | "Moderately Active" | "Insufficiently Active"
+  label: string;          // "Excellent" | "Very Good" | "Active" | "Fair" | "Poor"
   color: string;          // CSS color class key
   breakdown: {
     green: number;        // count of green biomarkers
@@ -79,11 +79,11 @@ function flagCredit(flag: "green" | "yellow" | "red"): number {
  * Map a numeric 300-850 score to its label and color.
  */
 function scoreToLabel(score: number): { label: string; color: string } {
-  if (score >= 800) return { label: "Exceptional", color: "exceptional" };
-  if (score >= 740) return { label: "Very Active", color: "very-active" };
-  if (score >= 670) return { label: "Active", color: "active" };
-  if (score >= 580) return { label: "Moderately Active", color: "moderate" };
-  return { label: "Insufficiently Active", color: "insufficient" };
+  if (score >= 800) return { label: "Excellent", color: "excellent" };
+  if (score >= 740) return { label: "Very Good", color: "very-good" };
+  if (score >= 670) return { label: "Good", color: "good" };
+  if (score >= 580) return { label: "Fair", color: "fair" };
+  return { label: "Poor", color: "poor" };
 }
 
 /**
@@ -145,8 +145,8 @@ export function calculateHealthScore(
   if (biomarkers.length === 0) {
     return {
       score: 300,
-      label: "Insufficiently Active",
-      color: "insufficient",
+      label: "Poor",
+      color: "poor",
       breakdown: { green: 0, yellow: 0, red: 0, total: 0 },
       topConcerns: [],
       tips: [],

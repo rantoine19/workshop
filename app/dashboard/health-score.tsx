@@ -24,11 +24,11 @@ interface HealthScoreData {
  * Score range legend entries for the credit-score display.
  */
 const SCORE_RANGES = [
-  { min: 300, label: "Insufficiently Active", className: "insufficient" },
-  { min: 580, label: "Moderately Active", className: "moderate" },
-  { min: 670, label: "Active", className: "active" },
-  { min: 740, label: "Very Active", className: "very-active" },
-  { min: 800, label: "Exceptional", className: "exceptional" },
+  { min: 300, label: "Poor", className: "poor" },
+  { min: 580, label: "Fair", className: "fair" },
+  { min: 670, label: "Good", className: "good" },
+  { min: 740, label: "Very Good", className: "very-good" },
+  { min: 800, label: "Excellent", className: "excellent" },
 ];
 
 /**
@@ -38,70 +38,58 @@ const SCORE_RANGES = [
  * a needle indicator, and the score number in the center.
  */
 function CreditScoreGauge({ score, label }: { score: number; label: string }) {
-  // Gauge geometry: semi-circle arc
   const cx = 150;
-  const cy = 130;
+  const cy = 140;
   const radius = 110;
-  const strokeWidth = 20;
+  const strokeWidth = 22;
 
-  // Arc goes from 180deg (left) to 0deg (right) — a semi-circle
-  // Convert score (300-850) to an angle (180 to 0)
   const normalizedScore = Math.max(300, Math.min(850, score));
-  const fraction = (normalizedScore - 300) / 550; // 0 to 1
-  const needleAngle = Math.PI * (1 - fraction); // PI (left) to 0 (right)
+  const fraction = (normalizedScore - 300) / 550;
+  const needleAngle = Math.PI * (1 - fraction);
 
-  // Needle endpoint
-  const needleLength = radius - strokeWidth / 2 - 8;
+  const needleLength = radius - strokeWidth / 2 - 10;
   const needleX = cx + needleLength * Math.cos(needleAngle);
   const needleY = cy - needleLength * Math.sin(needleAngle);
 
-  // Semi-circle arc path (left to right)
   const arcStartX = cx - radius;
   const arcStartY = cy;
   const arcEndX = cx + radius;
   const arcEndY = cy;
 
-  // Background arc path
-  const bgArc = `M ${arcStartX} ${arcStartY} A ${radius} ${radius} 0 0 1 ${arcEndX} ${arcEndY}`;
-
-  // Colored progress arc — draws from left up to needle position
-  const progressEndX = cx + radius * Math.cos(needleAngle);
-  const progressEndY = cy - radius * Math.sin(needleAngle);
-  const largeArcFlag = fraction > 0.5 ? 1 : 0;
-  const progressArc = `M ${arcStartX} ${arcStartY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${progressEndX} ${progressEndY}`;
+  // Full colored arc (entire semi-circle shows the gradient spectrum)
+  const fullArc = `M ${arcStartX} ${arcStartY} A ${radius} ${radius} 0 0 1 ${arcEndX} ${arcEndY}`;
 
   return (
     <div className="health-score__gauge">
       <svg
         className="health-score__gauge-svg"
-        viewBox="0 0 300 160"
+        viewBox="0 0 300 170"
         aria-label={`Health Credit Score: ${score} out of 850, rated ${label}`}
         role="img"
       >
-        {/* Gradient definition for the colored arc */}
         <defs>
           <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="30%" stopColor="#f97316" />
-            <stop offset="50%" stopColor="#84cc16" />
-            <stop offset="75%" stopColor="#22c55e" />
+            <stop offset="25%" stopColor="#f97316" />
+            <stop offset="45%" stopColor="#eab308" />
+            <stop offset="60%" stopColor="#84cc16" />
+            <stop offset="80%" stopColor="#22c55e" />
             <stop offset="100%" stopColor="#15803d" />
           </linearGradient>
         </defs>
 
-        {/* Background arc (gray) */}
+        {/* Gray background arc */}
         <path
-          d={bgArc}
+          d={fullArc}
           fill="none"
           stroke="#e5e7eb"
-          strokeWidth={strokeWidth}
+          strokeWidth={strokeWidth + 2}
           strokeLinecap="round"
         />
 
-        {/* Colored arc up to the score position */}
+        {/* Full gradient colored arc — shows entire spectrum */}
         <path
-          className="health-score__gauge-arc"
-          d={progressArc}
+          d={fullArc}
           fill="none"
           stroke="url(#gaugeGradient)"
           strokeWidth={strokeWidth}
@@ -110,27 +98,30 @@ function CreditScoreGauge({ score, label }: { score: number; label: string }) {
 
         {/* Needle */}
         <line
-          className="health-score__needle"
           x1={cx}
           y1={cy}
           x2={needleX}
           y2={needleY}
           stroke="#1f2937"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
         />
+        {/* Needle tip dot */}
+        <circle cx={needleX} cy={needleY} r="4" fill="#1f2937" />
         {/* Needle center dot */}
-        <circle cx={cx} cy={cy} r="5" fill="#1f2937" />
+        <circle cx={cx} cy={cy} r="6" fill="#1f2937" />
 
-        {/* Scale labels at edges */}
-        <text x={arcStartX - 5} y={cy + 20} textAnchor="middle" className="health-score__scale-label">300</text>
-        <text x={arcEndX + 5} y={cy + 20} textAnchor="middle" className="health-score__scale-label">850</text>
+        {/* Scale labels */}
+        <text x={arcStartX - 5} y={cy + 22} textAnchor="middle" className="health-score__scale-label">300</text>
+        <text x={arcEndX + 5} y={cy + 22} textAnchor="middle" className="health-score__scale-label">850</text>
       </svg>
 
-      {/* Score number overlay — centered inside the arc */}
-      <div className="health-score__number">{score}</div>
-      <div className={`health-score__label health-score__label--${label.toLowerCase().replace(/\s+/g, "-")}`}>
-        {label}
+      {/* Score + label below the gauge (not overlapping) */}
+      <div className="health-score__score-block">
+        <div className="health-score__number">{score}</div>
+        <div className={`health-score__label health-score__label--${label.toLowerCase().replace(/\s+/g, "-")}`}>
+          {label}
+        </div>
       </div>
     </div>
   );
