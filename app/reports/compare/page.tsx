@@ -310,6 +310,13 @@ export default function ComparePage() {
             </div>
           </div>
 
+          {/* View as charts link */}
+          <div className="compare-page__chart-link">
+            <Link href="/reports/trends">
+              View as Charts
+            </Link>
+          </div>
+
           {/* Disclaimer */}
           <p className="compare-page__disclaimer">
             Trends are informational only and do not constitute medical advice.
