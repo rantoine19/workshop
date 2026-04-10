@@ -85,6 +85,57 @@ export function buildHealthContext(profile: {
   return `Patient health profile:\n${parts.join("\n")}\n\nUse this information to personalize your responses. For example, if the patient has diabetes, pay extra attention to glucose and A1C values.`;
 }
 
+const MAX_MULTI_REPORT_CHARS = 12000; // ~3000 tokens
+
+export interface MultiReportData {
+  filename: string;
+  report_date: string | null;
+  created_at: string;
+  biomarkers: Array<{
+    name: string;
+    value: number;
+    unit: string;
+    flag: string;
+  }>;
+  summary_plain: string;
+}
+
+/**
+ * Builds combined context from multiple reports for date-aware chat.
+ * Truncates if combined context exceeds token budget.
+ */
+export function buildMultiReportContext(reports: MultiReportData[]): string {
+  if (reports.length === 0) return "";
+
+  const sections: string[] = [];
+
+  for (const report of reports) {
+    const dateLabel = report.report_date
+      ? report.report_date
+      : `uploaded ${report.created_at.slice(0, 10)}`;
+
+    const biomarkerList = report.biomarkers
+      .map((b) => {
+        const flag = b.flag !== "green" ? ` [${b.flag.toUpperCase()}]` : "";
+        return `  - ${b.name}: ${b.value} ${b.unit}${flag}`;
+      })
+      .join("\n");
+
+    sections.push(
+      `--- Report: ${report.filename} (${dateLabel}) ---\nSummary: ${report.summary_plain}\nLab Results:\n${biomarkerList}`
+    );
+  }
+
+  let combined = sections.join("\n\n");
+
+  // Truncate if too long
+  if (combined.length > MAX_MULTI_REPORT_CHARS) {
+    combined = combined.slice(0, MAX_MULTI_REPORT_CHARS) + "\n[...truncated]";
+  }
+
+  return `Here are ALL of the patient's uploaded reports for context. Use the dates to track changes over time and provide date-aware insights.\n\n${combined}\n\nUse this data to answer the patient's questions. You can compare values across reports when relevant.`;
+}
+
 export function buildReportContext(parsedResult: {
   biomarkers: Array<{
     name: string;

@@ -164,6 +164,7 @@ describe("Audit Logger", () => {
         "report.view",
         "report.parse",
         "report.delete",
+        "report.chat_upload",
         "chat.message",
         "chat.delete",
         "doctor_questions.generate",
@@ -171,6 +172,7 @@ describe("Audit Logger", () => {
 
       const resourceTypes: Record<AuditAction, AuditResourceType> = {
         "report.upload": "report",
+        "report.chat_upload": "report",
         "report.view": "report",
         "report.parse": "report",
         "report.delete": "report",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useChat } from "@/hooks/useChat";
 import { MessageBubble, BotAvatar } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
@@ -28,6 +28,9 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
   const [selectorDismissed, setSelectorDismissed] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<"uploading" | "parsing" | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Show report selector when: no reportId prop, no active session, not dismissed,
   // and no report already attached
@@ -59,6 +62,58 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
 
   // Whether there is any report context active (prop or attached)
   const hasReportContext = !!reportId || !!attachedReport;
+
+  /** Handle inline file upload from chat input */
+  const handleFileUpload = useCallback(async (file: File) => {
+    setUploadingFile(file.name);
+    setUploadProgress("uploading");
+    setUploadError(null);
+
+    try {
+      // 1. Upload the file
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/chat/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const data = await uploadRes.json();
+        throw new Error(data.error || "Upload failed");
+      }
+
+      const { report_id, filename } = await uploadRes.json();
+
+      // 2. Trigger parsing
+      setUploadProgress("parsing");
+
+      const parseRes = await fetch("/api/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ report_id }),
+      });
+
+      if (!parseRes.ok) {
+        const data = await parseRes.json();
+        throw new Error(data.error || "Analysis failed");
+      }
+
+      // 3. Attach the report to the chat
+      attachReport({
+        id: report_id,
+        filename: filename || file.name,
+        date: new Date().toLocaleDateString(),
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setUploadError(message);
+    } finally {
+      setUploadingFile(null);
+      setUploadProgress(null);
+    }
+  }, [attachReport]);
 
   return (
     <div className="chat-layout">
@@ -166,7 +221,19 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
           </div>
         )}
 
-        <ChatInput onSend={sendMessage} disabled={isLoading} />
+        {uploadError && (
+          <div className="chat-error">
+            Upload: {uploadError}
+          </div>
+        )}
+
+        <ChatInput
+          onSend={sendMessage}
+          disabled={isLoading}
+          onFileUpload={handleFileUpload}
+          uploadingFile={uploadingFile}
+          uploadProgress={uploadProgress}
+        />
       </div>
     </div>
   );

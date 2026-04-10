@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AuditAction =
   | "report.upload"
+  | "report.chat_upload"
   | "report.view"
   | "report.parse"
   | "report.delete"

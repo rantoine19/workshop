@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getClaudeClient } from "@/lib/claude/client";
-import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext } from "@/lib/claude/chat-prompts";
+import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext } from "@/lib/claude/chat-prompts";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
@@ -99,12 +99,12 @@ export async function POST(request: Request) {
 
   const healthContext = profileData ? buildHealthContext(profileData) : "";
 
-  // Load report context only for the specific report_id.
-  // Each chat session is tied to one report — results may differ between reports.
+  // Load report context — single report if report_id provided, otherwise multi-report
   let reportContext = "";
   const reportId = body.report_id;
 
   if (reportId) {
+    // Single-report context: load the specific report's parsed data
     const { data: parsedResult } = await supabase
       .from("parsed_results")
       .select("biomarkers, summary_plain")
@@ -115,6 +115,54 @@ export async function POST(request: Request) {
 
     if (parsedResult && parsedResult.biomarkers) {
       reportContext = buildReportContext(parsedResult);
+    }
+  } else {
+    // Multi-report context: load ALL user's parsed reports (up to 5 most recent)
+    const { data: userReports } = await supabase
+      .from("reports")
+      .select("id, original_filename, report_date, created_at")
+      .eq("user_id", user.id)
+      .eq("status", "parsed")
+      .order("report_date", { ascending: false, nullsFirst: false })
+      .limit(5);
+
+    if (userReports && userReports.length > 0) {
+      const reportIds = userReports.map((r) => r.id);
+      const { data: allParsed } = await supabase
+        .from("parsed_results")
+        .select("report_id, biomarkers, summary_plain")
+        .in("report_id", reportIds)
+        .order("created_at", { ascending: false });
+
+      if (allParsed && allParsed.length > 0) {
+        // Build a map of report_id -> latest parsed result
+        const parsedMap = new Map<string, typeof allParsed[0]>();
+        for (const p of allParsed) {
+          if (!parsedMap.has(p.report_id)) {
+            parsedMap.set(p.report_id, p);
+          }
+        }
+
+        const multiReportData = userReports
+          .filter((r) => parsedMap.has(r.id))
+          .map((r) => {
+            const parsed = parsedMap.get(r.id)!;
+            return {
+              filename: r.original_filename,
+              report_date: r.report_date,
+              created_at: r.created_at,
+              biomarkers: (parsed.biomarkers || []).map((b: { name: string; value: number; unit: string; flag: string }) => ({
+                name: b.name,
+                value: b.value,
+                unit: b.unit,
+                flag: b.flag,
+              })),
+              summary_plain: parsed.summary_plain,
+            };
+          });
+
+        reportContext = buildMultiReportContext(multiReportData);
+      }
     }
   }
 

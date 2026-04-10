@@ -14,6 +14,7 @@ export interface ParsedBiomarker {
 export interface ParsedReportResult {
   biomarkers: ParsedBiomarker[];
   summary: string;
+  report_date: string | null;
 }
 
 /**

@@ -5,11 +5,16 @@ import { useState, useRef } from "react";
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  onFileUpload?: (file: File) => void;
+  uploadingFile?: string | null;
+  uploadProgress?: "uploading" | "parsing" | null;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, onFileUpload, uploadingFile, uploadProgress }: ChatInputProps) {
   const [input, setInput] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,27 +42,113 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
   }
 
+  function handleAttachClick() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+    // Reset the input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function handleRemoveFile() {
+    setSelectedFile(null);
+  }
+
+  function handleUploadFile() {
+    if (selectedFile && onFileUpload) {
+      onFileUpload(selectedFile);
+      setSelectedFile(null);
+    }
+  }
+
   return (
-    <form className="chat-input-form" onSubmit={handleSubmit}>
-      <textarea
-        ref={textareaRef}
-        className="chat-input"
-        value={input}
-        onChange={handleInput}
-        onKeyDown={handleKeyDown}
-        placeholder="Ask about your health data..."
-        disabled={disabled}
-        rows={1}
-        aria-label="Chat message"
-      />
-      <button
-        type="submit"
-        className="chat-send-button"
-        disabled={!input.trim() || disabled}
-        aria-label="Send message"
-      >
-        Send
-      </button>
-    </form>
+    <div className="chat-input__wrapper">
+      {/* File preview bar */}
+      {selectedFile && !uploadProgress && (
+        <div className="chat-input__file-preview">
+          <span className="chat-input__file-preview-name">{selectedFile.name}</span>
+          <button
+            type="button"
+            className="chat-input__file-preview-upload"
+            onClick={handleUploadFile}
+            aria-label="Upload file"
+          >
+            Upload
+          </button>
+          <button
+            type="button"
+            className="chat-input__file-preview-remove"
+            onClick={handleRemoveFile}
+            aria-label="Remove file"
+          >
+            x
+          </button>
+        </div>
+      )}
+
+      {/* Upload progress indicator */}
+      {uploadProgress && uploadingFile && (
+        <div className="chat-input__upload-progress">
+          <span className="chat-input__upload-progress-spinner" aria-hidden="true"></span>
+          <span>
+            {uploadProgress === "uploading"
+              ? `Uploading ${uploadingFile}...`
+              : `Analyzing ${uploadingFile}...`}
+          </span>
+        </div>
+      )}
+
+      <form className="chat-input-form" onSubmit={handleSubmit}>
+        <button
+          type="button"
+          className="chat-input__attach-btn"
+          onClick={handleAttachClick}
+          disabled={disabled || !!uploadProgress}
+          aria-label="Attach file"
+          title="Upload a medical report"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+          </svg>
+        </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg"
+          onChange={handleFileSelect}
+          className="chat-input__file-hidden"
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+
+        <textarea
+          ref={textareaRef}
+          className="chat-input"
+          value={input}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask about your health data..."
+          disabled={disabled}
+          rows={1}
+          aria-label="Chat message"
+        />
+        <button
+          type="submit"
+          className="chat-send-button"
+          disabled={!input.trim() || disabled}
+          aria-label="Send message"
+        >
+          Send
+        </button>
+      </form>
+    </div>
   );
 }
