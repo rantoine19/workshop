@@ -80,25 +80,48 @@ export default function ReportResultsPage() {
   const handleReanalyze = useCallback(async () => {
     setIsReanalyzing(true);
     setError(null);
-    try {
-      const response = await fetch("/api/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ report_id: reportId }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Re-analysis failed");
+
+    const MAX_RETRIES = 3;
+    let lastError = "";
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch("/api/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ report_id: reportId }),
+        });
+
+        if (response.ok) {
+          await fetchReport();
+          return; // Success!
+        }
+
+        const data = await response.json().catch(() => ({ error: "Unknown error" }));
+
+        // Check for overloaded/rate limit — retry after delay
+        if (response.status === 529 || response.status === 429 ||
+            (data.error && (data.error.includes("Overloaded") || data.error.includes("overloaded") || data.error.includes("rate")))) {
+          lastError = "Our AI is busy right now. Retrying...";
+          if (attempt < MAX_RETRIES) {
+            await new Promise((r) => setTimeout(r, 3000 * attempt)); // 3s, 6s, 9s
+            continue;
+          }
+        }
+
+        lastError = data.error || "Re-analysis failed";
+        break;
+      } catch {
+        lastError = "Network error. Please check your connection.";
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, 2000));
+          continue;
+        }
       }
-      // Reload report to show updated results
-      await fetchReport();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Re-analysis failed. Please try again."
-      );
-    } finally {
-      setIsReanalyzing(false);
     }
+
+    setError(lastError || "Re-analysis failed. The AI may be temporarily busy — please try again in a minute.");
+    setIsReanalyzing(false);
   }, [reportId, fetchReport]);
 
   useEffect(() => {

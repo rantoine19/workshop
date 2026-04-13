@@ -1,6 +1,21 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import Link from "next/link";
+
+/**
+ * Category emojis for fun visual flair.
+ */
+const CATEGORY_EMOJIS: Record<string, string> = {
+  cholesterol: "\u2764\ufe0f",
+  glucose: "\ud83c\udf6c",
+  blood_pressure: "\ud83e\ude78",
+  liver: "\ud83e\udec0",
+  kidney: "\ud83e\udea8",
+  thyroid: "\ud83e\udd8b",
+  iron: "\ud83e\uddf2",
+  general: "\u2728",
+};
 
 /**
  * Daily health tips organized by biomarker category.
@@ -108,30 +123,33 @@ function getCategoriesFromBiomarkers(
   return Array.from(categories);
 }
 
-/**
- * Select a daily tip based on the day of year and flagged biomarkers.
- * Changes daily but is personalized to the user's health concerns.
- */
-function selectDailyTip(
-  concerns: Array<{ name: string; flag: string }>
-): string {
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
+interface TipWithCategory {
+  tip: string;
+  category: string;
+  emoji: string;
+}
 
-  // Build pool: flagged-category tips first, then general
+/**
+ * Build the full tip pool with category info.
+ */
+function buildTipPool(
+  concerns: Array<{ name: string; flag: string }>
+): TipWithCategory[] {
   const categories = getCategoriesFromBiomarkers(concerns);
-  const pool: string[] = [];
+  const pool: TipWithCategory[] = [];
 
   for (const cat of categories) {
     if (TIPS_BY_CATEGORY[cat]) {
-      pool.push(...TIPS_BY_CATEGORY[cat]);
+      for (const tip of TIPS_BY_CATEGORY[cat]) {
+        pool.push({ tip, category: cat, emoji: CATEGORY_EMOJIS[cat] || "\u2728" });
+      }
     }
   }
-  pool.push(...TIPS_BY_CATEGORY.general);
+  for (const tip of TIPS_BY_CATEGORY.general) {
+    pool.push({ tip, category: "general", emoji: CATEGORY_EMOJIS.general });
+  }
 
-  return pool[dayOfYear % pool.length];
+  return pool;
 }
 
 interface DailyTipProps {
@@ -139,24 +157,42 @@ interface DailyTipProps {
 }
 
 export function DailyTip({ concerns }: DailyTipProps) {
-  const tip = selectDailyTip(concerns);
+  const pool = buildTipPool(concerns);
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  const [tipIndex, setTipIndex] = useState(dayOfYear % pool.length);
+  const currentTip = pool[tipIndex] || pool[0];
+
+  const showNextTip = useCallback(() => {
+    setTipIndex((prev) => (prev + 1) % pool.length);
+  }, [pool.length]);
+
+  if (!currentTip) return null;
 
   return (
     <div className="db-card db-daily-tip">
       <div className="db-daily-tip__header">
-        <span className="db-daily-tip__icon" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18h6" />
-            <path d="M10 22h4" />
-            <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />
-          </svg>
+        <span className="db-daily-tip__emoji" aria-hidden="true">
+          {currentTip.emoji}
         </span>
         <span className="db-card__title">Daily Health Tip</span>
       </div>
-      <p className="db-daily-tip__text">&ldquo;{tip}&rdquo;</p>
-      <Link href="/chat" className="db-card__link">
-        More Tips &rarr;
-      </Link>
+      <p className="db-daily-tip__text">&ldquo;{currentTip.tip}&rdquo;</p>
+      <div className="db-daily-tip__footer">
+        <button
+          className="db-daily-tip__next-btn"
+          onClick={showNextTip}
+          type="button"
+        >
+          Show Another Tip &rarr;
+        </button>
+        <Link href="/chat" className="db-card__link">
+          Ask about this
+        </Link>
+      </div>
     </div>
   );
 }

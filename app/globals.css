@@ -748,12 +748,39 @@ button[type="submit"]:disabled {
   flex-shrink: 0;
 }
 
+.db-daily-tip__emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
 .db-daily-tip__text {
   font-size: 0.95rem;
   color: var(--color-gray-700);
   line-height: 1.5;
   font-style: italic;
   margin: 0;
+}
+
+.db-daily-tip__footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.db-daily-tip__next-btn {
+  background: none;
+  border: none;
+  color: var(--color-green-600);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.db-daily-tip__next-btn:hover {
+  color: var(--color-green-700);
 }
 
 /* =========================
@@ -908,6 +935,52 @@ button[type="submit"]:disabled {
 }
 
 /* Breakdown summary (Normal / Borderline / Needs Attention) */
+.health-score__ranges {
+  display: flex;
+  justify-content: center;
+  gap: 0.125rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 360px;
+}
+
+.health-score__range {
+  flex: 1;
+  text-align: center;
+  padding: 0.375rem 0.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  line-height: 1.3;
+}
+
+.health-score__range-score {
+  display: block;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.health-score__range-label {
+  display: block;
+  font-weight: 500;
+}
+
+.health-score__range--poor { background: #fef2f2; color: #991b1b; }
+.health-score__range--fair { background: #fff7ed; color: #9a3412; }
+.health-score__range--good { background: #fefce8; color: #854d0e; }
+.health-score__range--very-good { background: #f0fdf4; color: #166534; }
+.health-score__range--excellent { background: #dcfce7; color: #14532d; }
+
+.health-score__report-link {
+  font-size: 0.75rem;
+  color: var(--color-green-600);
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+.health-score__report-link:hover {
+  text-decoration: underline;
+}
+
 .health-score__breakdown-summary {
   display: flex;
   flex-wrap: wrap;
