@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getClaudeClient } from "@/lib/claude/client";
-import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext, buildEnrichedContext } from "@/lib/claude/chat-prompts";
+import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext, buildEnrichedContext, type StructuredMedication } from "@/lib/claude/chat-prompts";
 import { lookupCondition } from "@/lib/health/nlm-api";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
@@ -98,7 +98,22 @@ export async function POST(request: Request) {
     .eq("id", user.id)
     .single();
 
-  const healthContext = profileData ? buildHealthContext(profileData) : "";
+  // Load structured medications for richer chat context
+  const { data: medicationsData } = await supabase
+    .from("medications")
+    .select("name, dosage, dosage_unit, frequency")
+    .eq("user_id", user.id)
+    .eq("active", true)
+    .order("name");
+
+  const structuredMeds: StructuredMedication[] = (medicationsData || []).map((m) => ({
+    name: m.name,
+    dosage: m.dosage,
+    dosage_unit: m.dosage_unit,
+    frequency: m.frequency,
+  }));
+
+  const healthContext = profileData ? buildHealthContext(profileData, structuredMeds) : "";
 
   // Load report context — single report if report_id provided, otherwise multi-report
   let reportContext = "";
