@@ -41,17 +41,48 @@ function calculateAge(dateOfBirth: string): number {
   return age;
 }
 
-export function buildHealthContext(profile: {
-  gender?: string | null;
-  date_of_birth?: string | null;
-  height_inches?: number | null;
-  known_conditions?: string[] | null;
-  medications?: string | null;
-  smoking_status?: string | null;
-  family_history?: string[] | null;
-  activity_level?: string | null;
-  sleep_hours?: string | null;
-}): string {
+export interface StructuredMedication {
+  name: string;
+  dosage?: string | null;
+  dosage_unit?: string | null;
+  frequency: string;
+}
+
+const FREQUENCY_DISPLAY: Record<string, string> = {
+  once_daily: "daily",
+  twice_daily: "twice daily",
+  three_times_daily: "3x daily",
+  weekly: "weekly",
+  as_needed: "as needed",
+  other: "",
+};
+
+export function formatMedicationForContext(med: StructuredMedication): string {
+  const parts = [med.name];
+  if (med.dosage) {
+    parts.push(med.dosage + (med.dosage_unit ? med.dosage_unit : ""));
+  }
+  const freq = FREQUENCY_DISPLAY[med.frequency] || med.frequency;
+  if (freq) {
+    parts.push(`(${freq})`);
+  }
+  return parts.join(" ");
+}
+
+export function buildHealthContext(
+  profile: {
+    gender?: string | null;
+    date_of_birth?: string | null;
+    height_inches?: number | null;
+    known_conditions?: string[] | null;
+    medications?: string | null;
+    smoking_status?: string | null;
+    family_history?: string[] | null;
+    activity_level?: string | null;
+    sleep_hours?: string | null;
+  },
+  structuredMedications?: StructuredMedication[]
+): string {
   const parts: string[] = [];
 
   if (profile.gender) parts.push(`Gender: ${profile.gender}`);
@@ -67,9 +98,15 @@ export function buildHealthContext(profile: {
   if (profile.known_conditions?.length) {
     parts.push(`Known conditions: ${profile.known_conditions.join(", ")}`);
   }
-  if (profile.medications) {
+
+  // Prefer structured medications, fall back to free-text
+  if (structuredMedications && structuredMedications.length > 0) {
+    const medList = structuredMedications.map(formatMedicationForContext).join(", ");
+    parts.push(`Active medications: ${medList}`);
+  } else if (profile.medications) {
     parts.push(`Medications: ${profile.medications}`);
   }
+
   if (profile.smoking_status && profile.smoking_status !== "none") {
     parts.push(`Smoking: ${profile.smoking_status}`);
   }

@@ -8,9 +8,14 @@ export type AuditAction =
   | "report.delete"
   | "chat.message"
   | "chat.delete"
-  | "doctor_questions.generate";
+  | "doctor_questions.generate"
+  | "medication.create"
+  | "medication.update"
+  | "medication.delete"
+  | "medication.photo_upload"
+  | "medication.photo_delete";
 
-export type AuditResourceType = "report" | "chat_session" | "parsed_result";
+export type AuditResourceType = "report" | "chat_session" | "parsed_result" | "medication";
 
 interface AuditEvent {
   userId: string;

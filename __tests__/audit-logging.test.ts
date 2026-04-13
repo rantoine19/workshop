@@ -168,6 +168,11 @@ describe("Audit Logger", () => {
         "chat.message",
         "chat.delete",
         "doctor_questions.generate",
+        "medication.create",
+        "medication.update",
+        "medication.delete",
+        "medication.photo_upload",
+        "medication.photo_delete",
       ];
 
       const resourceTypes: Record<AuditAction, AuditResourceType> = {
@@ -179,6 +184,11 @@ describe("Audit Logger", () => {
         "chat.message": "chat_session",
         "chat.delete": "chat_session",
         "doctor_questions.generate": "parsed_result",
+        "medication.create": "medication",
+        "medication.update": "medication",
+        "medication.delete": "medication",
+        "medication.photo_upload": "medication",
+        "medication.photo_delete": "medication",
       };
 
       for (const action of actions) {
