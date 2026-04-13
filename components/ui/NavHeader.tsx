@@ -72,6 +72,9 @@ export default function NavHeader({
         <Link href="/medications" className={linkClass("/medications")}>
           Medications
         </Link>
+        <Link href="/glossary" className={linkClass("/glossary")}>
+          Glossary
+        </Link>
         <Link href="/profile" className={linkClass("/profile")}>
           <span className="nav-header__profile-link">
             {profileInfo && (

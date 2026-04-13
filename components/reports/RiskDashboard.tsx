@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { getDefinition } from "@/lib/health/glossary";
 
 interface RiskFlagData {
   id: string;
@@ -113,37 +114,9 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
     return order[a.flag] - order[b.flag];
   });
 
-  /** What this biomarker measures — plain language explanation */
+  /** What this biomarker measures — plain language explanation (from glossary) */
   function getDescription(name: string): string {
-    const desc: Record<string, string> = {
-      "Total Cholesterol": "A waxy substance in your blood. Your body needs it to build cells, but too much can clog arteries.",
-      "LDL Cholesterol": "Often called 'bad' cholesterol. High levels can build up in your arteries and increase heart disease risk.",
-      "HDL Cholesterol": "The 'good' cholesterol. It helps remove other forms of cholesterol from your bloodstream.",
-      "Triglycerides": "A type of fat in your blood. High levels can raise your risk for heart disease.",
-      "Glucose (Fasting)": "Your blood sugar level after not eating. High levels may indicate diabetes or pre-diabetes.",
-      "A1C": "Shows your average blood sugar over the past 2-3 months. Used to diagnose and monitor diabetes.",
-      "Hemoglobin A1C": "Shows your average blood sugar over the past 2-3 months. Used to diagnose and monitor diabetes.",
-      "Blood Pressure Systolic": "The pressure in your arteries when your heart beats. High levels strain your heart and blood vessels.",
-      "Blood Pressure Diastolic": "The pressure in your arteries between heartbeats. High levels increase risk of heart disease and stroke.",
-      "Resting Heart Rate": "How many times your heart beats per minute at rest. A lower rate usually means better heart fitness.",
-      "Hemoglobin": "A protein in red blood cells that carries oxygen. Low levels may mean anemia.",
-      "Hematocrit": "The percentage of your blood that is red blood cells. Helps detect anemia or dehydration.",
-      "White Blood Cell Count": "Your immune system's defenders. High or low counts can signal infection or immune issues.",
-      "Platelet Count": "Cells that help your blood clot. Too few can cause bleeding; too many can cause clots.",
-      "Creatinine": "A waste product filtered by your kidneys. High levels may mean your kidneys aren't working well.",
-      "BUN": "Blood urea nitrogen — another measure of kidney function. High levels can indicate kidney problems.",
-      "Sodium": "An electrolyte that helps control fluid balance and nerve function.",
-      "Potassium": "An electrolyte critical for heart rhythm and muscle function.",
-      "Calcium": "Important for bones, heart, muscles, and nerves.",
-      "TSH": "Thyroid-stimulating hormone. Controls your metabolism. Abnormal levels indicate thyroid issues.",
-      "ALT": "A liver enzyme. High levels can indicate liver damage or disease.",
-      "AST": "A liver enzyme. Elevated levels may suggest liver, heart, or muscle problems.",
-      "Vitamin D": "Essential for bone health and immune function. Many people are deficient.",
-      "Vitamin B12": "Important for nerve function and making red blood cells. Low levels cause fatigue.",
-      "Iron": "Needed to carry oxygen in your blood. Low iron causes anemia and fatigue.",
-      "Uric Acid": "A waste product. High levels can cause gout and kidney stones.",
-    };
-    return desc[name] || "A health marker measured in your lab work.";
+    return getDefinition(name);
   }
 
   /** What the specific value means for this person */
