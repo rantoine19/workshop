@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
 import { useChat } from "@/hooks/useChat";
 import { MessageBubble, BotAvatar } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
@@ -175,6 +176,12 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
                 >
                   Explain my cholesterol levels
                 </button>
+                <Link
+                  href="/glossary"
+                  className="chat-suggestions__chip"
+                >
+                  Browse Health Glossary
+                </Link>
               </div>
             </div>
           )}

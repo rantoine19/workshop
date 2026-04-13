@@ -1,6 +1,7 @@
 "use client";
 
 import { type JSX, useEffect, useState, useCallback } from "react";
+import GlossaryTerm from "@/components/ui/GlossaryTerm";
 
 interface SimplifiedBiomarker {
   name: string;
@@ -508,7 +509,9 @@ export default function HealthSummary({ reportId }: HealthSummaryProps) {
                 )}
               </span>
               <span className="health-summary__biomarker-name">
-                {biomarker.name}
+                <GlossaryTerm term={biomarker.name}>
+                  {biomarker.name}
+                </GlossaryTerm>
               </span>
               <span className="health-summary__biomarker-value">
                 {biomarker.value}
