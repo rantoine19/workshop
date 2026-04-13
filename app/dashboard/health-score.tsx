@@ -235,17 +235,44 @@ export function HealthScore({
       <div className="health-score health-score--credit health-score--compact db-card">
         <h3 className="db-card__title">Health Credit Score</h3>
         <CreditScoreGauge score={data.score} label={data.label} />
+        <div className="health-score__ranges">
+          <div className="health-score__range health-score__range--poor">
+            <span className="health-score__range-score">300-579</span>
+            <span className="health-score__range-label">Poor</span>
+          </div>
+          <div className="health-score__range health-score__range--fair">
+            <span className="health-score__range-score">580-669</span>
+            <span className="health-score__range-label">Fair</span>
+          </div>
+          <div className="health-score__range health-score__range--good">
+            <span className="health-score__range-score">670-739</span>
+            <span className="health-score__range-label">Good</span>
+          </div>
+          <div className="health-score__range health-score__range--very-good">
+            <span className="health-score__range-score">740-799</span>
+            <span className="health-score__range-label">Very Good</span>
+          </div>
+          <div className="health-score__range health-score__range--excellent">
+            <span className="health-score__range-score">800-850</span>
+            <span className="health-score__range-label">Excellent</span>
+          </div>
+        </div>
         <div className="health-score__breakdown-summary">
           <span className="health-score__breakdown-item health-score__breakdown-item--green">
-            {green}N
+            {green} Normal
           </span>
           <span className="health-score__breakdown-item health-score__breakdown-item--yellow">
-            {yellow}B
+            {yellow} Borderline
           </span>
           <span className="health-score__breakdown-item health-score__breakdown-item--red">
-            {red}R
+            {red} Needs Attention
           </span>
         </div>
+        {data.reportId && (
+          <Link href={`/reports/${data.reportId}`} className="health-score__report-link">
+            Based on: {data.reportName}
+          </Link>
+        )}
       </div>
     );
   }
