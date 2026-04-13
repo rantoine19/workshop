@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <Logo variant="full" size="md" />
+        <Logo variant="full" size="md" linkTo="/dashboard" />
         <nav className="dashboard-header__nav">
           <Link href="/upload" className="dashboard-header__link">Upload</Link>
           <Link href="/chat" className="dashboard-header__link">Chat</Link>
