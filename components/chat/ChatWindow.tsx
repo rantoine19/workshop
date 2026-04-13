@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useChat } from "@/hooks/useChat";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { useVoiceOutput } from "@/hooks/useVoiceOutput";
 import { MessageBubble, BotAvatar } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import { ChatSidebar } from "./ChatSidebar";
@@ -32,6 +34,9 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
   const [uploadingFile, setUploadingFile] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<"uploading" | "parsing" | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const voiceInput = useVoiceInput();
+  const voiceOutput = useVoiceOutput();
 
   // Show report selector when: no reportId prop, no active session, not dismissed,
   // and no report already attached
@@ -187,7 +192,11 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
           )}
 
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              voiceOutput={voiceOutput}
+            />
           ))}
 
           {isLoading && (
@@ -240,6 +249,12 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
           onFileUpload={handleFileUpload}
           uploadingFile={uploadingFile}
           uploadProgress={uploadProgress}
+          isListening={voiceInput.isListening}
+          isVoiceSupported={voiceInput.isSupported}
+          voiceTranscript={voiceInput.transcript}
+          voiceError={voiceInput.error}
+          onToggleListening={voiceInput.toggleListening}
+          onResetTranscript={voiceInput.resetTranscript}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -8,19 +8,50 @@ interface ChatInputProps {
   onFileUpload?: (file: File) => void;
   uploadingFile?: string | null;
   uploadProgress?: "uploading" | "parsing" | null;
+  isListening?: boolean;
+  isVoiceSupported?: boolean;
+  voiceTranscript?: string;
+  voiceError?: string | null;
+  onToggleListening?: () => void;
+  onResetTranscript?: () => void;
 }
 
-export function ChatInput({ onSend, disabled, onFileUpload, uploadingFile, uploadProgress }: ChatInputProps) {
+export function ChatInput({
+  onSend,
+  disabled,
+  onFileUpload,
+  uploadingFile,
+  uploadProgress,
+  isListening = false,
+  isVoiceSupported = false,
+  voiceTranscript = "",
+  voiceError,
+  onToggleListening,
+  onResetTranscript,
+}: ChatInputProps) {
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fill input with voice transcript as it arrives
+  useEffect(() => {
+    if (voiceTranscript) {
+      setInput(voiceTranscript);
+      // Auto-resize textarea
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+      }
+    }
+  }, [voiceTranscript]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim() || disabled) return;
     onSend(input);
     setInput("");
+    onResetTranscript?.();
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -70,6 +101,20 @@ export function ChatInput({ onSend, disabled, onFileUpload, uploadingFile, uploa
 
   return (
     <div className="chat-input__wrapper">
+      {/* Listening indicator */}
+      {isListening && (
+        <div className="chat-input__listening" role="status" aria-live="polite">
+          Listening...
+        </div>
+      )}
+
+      {/* Voice error */}
+      {voiceError && (
+        <div className="chat-input__voice-error" role="alert">
+          {voiceError}
+        </div>
+      )}
+
       {/* File preview bar */}
       {selectedFile && !uploadProgress && (
         <div className="chat-input__file-preview">
@@ -128,6 +173,24 @@ export function ChatInput({ onSend, disabled, onFileUpload, uploadingFile, uploa
           aria-hidden="true"
           tabIndex={-1}
         />
+
+        {isVoiceSupported && onToggleListening && (
+          <button
+            type="button"
+            className={`chat-input__mic-btn${isListening ? " chat-input__mic-btn--recording" : ""}`}
+            onClick={onToggleListening}
+            disabled={disabled || !!uploadProgress}
+            aria-label={isListening ? "Stop recording" : "Start voice input"}
+            title={isListening ? "Stop recording" : "Voice input"}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </button>
+        )}
 
         <textarea
           ref={textareaRef}

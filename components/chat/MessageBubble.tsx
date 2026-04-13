@@ -1,7 +1,12 @@
+"use client";
+
+import { useCallback } from "react";
 import type { ChatMessage } from "@/hooks/useChat";
+import type { UseVoiceOutputReturn } from "@/hooks/useVoiceOutput";
 
 interface MessageBubbleProps {
   message: ChatMessage;
+  voiceOutput?: UseVoiceOutputReturn;
 }
 
 export function BotAvatar() {
@@ -28,9 +33,20 @@ export function BotAvatar() {
   );
 }
 
-export function MessageBubble({ message }: MessageBubbleProps) {
+export function MessageBubble({ message, voiceOutput }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const isStreaming = message.isStreaming ?? false;
+  const isAssistant = message.role === "assistant";
+  const showSpeaker = isAssistant && !isStreaming && voiceOutput?.isSupported;
+
+  const handleSpeak = useCallback(() => {
+    if (!voiceOutput) return;
+    if (voiceOutput.isSpeaking) {
+      voiceOutput.stop();
+    } else {
+      voiceOutput.speak(message.content);
+    }
+  }, [voiceOutput, message.content]);
 
   return (
     <div
@@ -46,14 +62,31 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             <span className="streaming-cursor" aria-hidden="true" />
           )}
         </div>
-        {!isStreaming && (
-          <span className="message-time">
-            {message.timestamp.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        )}
+        <div className="message-bubble__footer">
+          {!isStreaming && (
+            <span className="message-time">
+              {message.timestamp.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
+          {showSpeaker && (
+            <button
+              type="button"
+              className={`message-bubble__speak-btn${voiceOutput.isSpeaking ? " message-bubble__speak-btn--speaking" : ""}`}
+              onClick={handleSpeak}
+              aria-label={voiceOutput.isSpeaking ? "Stop speaking" : "Read aloud"}
+              title={voiceOutput.isSpeaking ? "Stop speaking" : "Read aloud"}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
