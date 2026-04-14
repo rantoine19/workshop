@@ -154,6 +154,7 @@ export function HealthScore({
   const [internalLoading, setInternalLoading] = useState(!compact);
   const [internalError, setInternalError] = useState(false);
   const [showExplain, setShowExplain] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   // Use external props when in compact mode, internal state otherwise
   const data = compact ? externalData : internalData;
@@ -233,7 +234,50 @@ export function HealthScore({
   if (compact) {
     return (
       <div className="health-score health-score--credit health-score--compact db-card">
-        <h3 className="db-card__title">Health Credit Score</h3>
+        <div className="health-score__title-row">
+          <h3 className="db-card__title">Health Credit Score</h3>
+          <button
+            type="button"
+            className="health-score__info-btn"
+            onClick={() => setShowInfo(!showInfo)}
+            aria-label="How is my score calculated?"
+            title="How is my score calculated?"
+          >
+            ?
+          </button>
+        </div>
+        {showInfo && (
+          <div className="health-score__info-popup">
+            <button
+              type="button"
+              className="health-score__info-close"
+              onClick={() => setShowInfo(false)}
+              aria-label="Close"
+            >
+              x
+            </button>
+            <h4>How Your Health Credit Score Works</h4>
+            <p>
+              Your score is calculated on a <strong>300&ndash;850 scale</strong>, similar
+              to a financial credit score. Each biomarker from your lab report contributes:
+            </p>
+            <ul>
+              <li><strong>Normal</strong> biomarkers earn full credit</li>
+              <li><strong>Borderline</strong> biomarkers earn half credit</li>
+              <li><strong>Needs Attention</strong> biomarkers earn no credit</li>
+            </ul>
+            <p>
+              Critical biomarkers like blood pressure, glucose, A1C, and cholesterol
+              are weighted 2x because of their clinical significance.
+            </p>
+            <p className="health-score__info-disclaimer">
+              This score is for informational and educational purposes only.
+              It is <strong>not a medical diagnosis</strong> and does not replace
+              your doctor&apos;s advice, instructions, or professional medical judgment.
+              Always consult your healthcare provider about your results.
+            </p>
+          </div>
+        )}
         <CreditScoreGauge score={data.score} label={data.label} />
         <div className="health-score__ranges">
           <div className="health-score__range health-score__range--poor">
