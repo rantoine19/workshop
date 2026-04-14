@@ -6683,3 +6683,135 @@ button.chat-send-button[type="submit"]:disabled {
     font-size: 1.4rem;
   }
 }
+
+/* =========================
+   Clinical Summary Export
+   ========================= */
+
+.chat-export-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1rem 0.25rem;
+}
+
+.chat-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.chat-export-btn__icon {
+  flex-shrink: 0;
+}
+
+.clinical-summary {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.clinical-summary__header {
+  text-align: center;
+  border-bottom: 2px solid var(--color-gray-900);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.clinical-summary__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.clinical-summary__patient-info {
+  font-size: 0.9rem;
+  color: var(--color-gray-600);
+  margin-top: 0.25rem;
+}
+
+.clinical-summary__section {
+  margin-bottom: 1.5rem;
+}
+
+.clinical-summary__section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-gray-900);
+  border-bottom: 1px solid var(--color-gray-300);
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.clinical-summary__list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.clinical-summary__numbered {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.clinical-summary__disclaimer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-gray-300);
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+  text-align: center;
+}
+
+.clinical-summary__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.clinical-summary__loading {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-gray-600);
+}
+
+.clinical-summary__loading-sub {
+  font-size: 0.85rem;
+  color: var(--color-gray-400);
+  margin-top: 0.5rem;
+}
+
+.clinical-summary__error {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--color-red-600);
+}
+
+.clinical-summary__error .btn {
+  margin-top: 1rem;
+}
+
+/* Print styles for clinical summary */
+@media print {
+  .nav-header,
+  .clinical-summary__actions,
+  .session-timeout {
+    display: none !important;
+  }
+
+  .clinical-summary {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  body {
+    background: white;
+  }
+}

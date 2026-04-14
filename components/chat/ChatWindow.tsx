@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useChat } from "@/hooks/useChat";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useVoiceOutput } from "@/hooks/useVoiceOutput";
@@ -36,6 +37,7 @@ export function ChatWindow({ reportId, initialMessage }: ChatWindowProps) {
   const [uploadProgress, setUploadProgress] = useState<"uploading" | "parsing" | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const router = useRouter();
   const voiceInput = useVoiceInput();
   const voiceOutput = useVoiceOutput();
 
@@ -142,6 +144,50 @@ export function ChatWindow({ reportId, initialMessage }: ChatWindowProps) {
 
       <div className="chat-window">
         <NavHeader backLabel="Dashboard" />
+
+        {sessionId && messages.length > 0 && (
+          <div className="chat-export-bar">
+            <button
+              type="button"
+              className="btn btn--outline btn--sm chat-export-btn"
+              onClick={() =>
+                router.push(`/chat/sessions/${sessionId}/summary`)
+              }
+              aria-label="Export clinical summary notes"
+            >
+              <svg
+                className="chat-export-btn__icon"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 1H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M5 1h6v3H5V1z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M5 8h6M5 11h4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              Export Notes
+            </button>
+          </div>
+        )}
+
         <div className="chat-disclaimer">
           This AI helps you understand your health data in simple language. It
           does not provide medical advice, diagnoses, or treatment

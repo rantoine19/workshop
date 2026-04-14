@@ -8,6 +8,7 @@ export type AuditAction =
   | "report.delete"
   | "chat.message"
   | "chat.delete"
+  | "chat.export_summary"
   | "doctor_questions.generate"
   | "medication.create"
   | "medication.update"
