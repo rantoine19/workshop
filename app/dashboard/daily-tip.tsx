@@ -189,7 +189,10 @@ export function DailyTip({ concerns }: DailyTipProps) {
         >
           Show Another Tip &rarr;
         </button>
-        <Link href="/chat" className="db-card__link">
+        <Link
+          href={`/chat?message=${encodeURIComponent("Tell me more about this health tip: " + currentTip.tip)}`}
+          className="db-card__link"
+        >
           Ask about this
         </Link>
       </div>

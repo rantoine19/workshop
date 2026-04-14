@@ -13,9 +13,10 @@ import NavHeader from "@/components/ui/NavHeader";
 
 interface ChatWindowProps {
   reportId?: string;
+  initialMessage?: string;
 }
 
-export function ChatWindow({ reportId }: ChatWindowProps) {
+export function ChatWindow({ reportId, initialMessage }: ChatWindowProps) {
   const {
     messages,
     isLoading,
@@ -47,6 +48,15 @@ export function ChatWindow({ reportId }: ChatWindowProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Auto-send initial message (e.g., from "Ask about this" on daily tip)
+  const initialMessageSentRef = useRef(false);
+  useEffect(() => {
+    if (initialMessage && !initialMessageSentRef.current && !isLoading && messages.length === 0) {
+      initialMessageSentRef.current = true;
+      sendMessage(initialMessage);
+    }
+  }, [initialMessage, isLoading, messages.length, sendMessage]);
 
   // Refresh sidebar when messages change (new message sent or session loaded)
   const prevMessageCountRef = useRef(0);
