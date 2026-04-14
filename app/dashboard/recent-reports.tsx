@@ -10,14 +10,21 @@ interface ReportItem {
   created_at: string;
 }
 
-export function RecentReports() {
+interface RecentReportsProps {
+  activeProfileId?: string | null;
+}
+
+export function RecentReports({ activeProfileId }: RecentReportsProps) {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchReports() {
       try {
-        const res = await fetch("/api/reports");
+        const url = activeProfileId
+          ? `/api/reports?family_member_id=${activeProfileId}`
+          : "/api/reports";
+        const res = await fetch(url);
         if (!res.ok) return;
         const data = await res.json();
         setReports((data.reports || []).slice(0, 3));
@@ -28,7 +35,7 @@ export function RecentReports() {
       }
     }
     fetchReports();
-  }, []);
+  }, [activeProfileId]);
 
   if (loading) {
     return (

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
 
   // Verify authentication
@@ -13,12 +13,24 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch user's reports (RLS enforces ownership)
-  const { data: reports, error } = await supabase
+  // Parse optional family_member_id query param
+  const { searchParams } = new URL(request.url);
+  const familyMemberId = searchParams.get("family_member_id");
+
+  // Fetch user's reports (RLS enforces ownership), filtered by family member
+  let query = supabase
     .from("reports")
     .select("id, original_filename, file_type, status, created_at")
     .order("created_at", { ascending: false })
     .limit(20);
+
+  if (familyMemberId) {
+    query = query.eq("family_member_id", familyMemberId);
+  } else {
+    query = query.is("family_member_id", null);
+  }
+
+  const { data: reports, error } = await query;
 
   if (error) {
     return NextResponse.json(
