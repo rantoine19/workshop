@@ -7,8 +7,9 @@ import { Suspense } from "react";
 function ChatContent() {
   const searchParams = useSearchParams();
   const reportId = searchParams.get("report_id") ?? undefined;
+  const initialMessage = searchParams.get("message") ?? undefined;
 
-  return <ChatWindow reportId={reportId} />;
+  return <ChatWindow reportId={reportId} initialMessage={initialMessage} />;
 }
 
 export default function ChatPage() {
