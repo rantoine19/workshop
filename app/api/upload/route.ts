@@ -32,6 +32,7 @@ export async function POST(request: Request) {
   }
 
   const file = formData.get("file") as File | null;
+  const familyMemberId = formData.get("family_member_id") as string | null;
 
   if (!file) {
     return NextResponse.json(
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
       file_type: getFileType(file),
       original_filename: file.name,
       status: "uploaded",
+      family_member_id: familyMemberId || null,
     })
     .select("id, status")
     .single();

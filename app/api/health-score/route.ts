@@ -23,14 +23,25 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Find the most recent parsed report for this user
-  const { data: latestReport, error: reportError } = await supabase
+  // Parse optional family_member_id query param
+  const { searchParams } = new URL(request.url);
+  const familyMemberId = searchParams.get("family_member_id");
+
+  // Find the most recent parsed report for this user (or family member)
+  let reportQuery = supabase
     .from("reports")
     .select("id, original_filename, status, created_at")
     .eq("status", "parsed")
     .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
+    .limit(1);
+
+  if (familyMemberId) {
+    reportQuery = reportQuery.eq("family_member_id", familyMemberId);
+  } else {
+    reportQuery = reportQuery.is("family_member_id", null);
+  }
+
+  const { data: latestReport, error: reportError } = await reportQuery.single();
 
   if (reportError || !latestReport) {
     // No parsed reports — return null result

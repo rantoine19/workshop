@@ -8,6 +8,8 @@ import { ImprovementTips } from "./improvement-tips";
 import { RecentReports } from "./recent-reports";
 import { QuickStats } from "./quick-stats";
 import { DailyTip } from "./daily-tip";
+import ProfileSwitcher from "@/components/ui/ProfileSwitcher";
+import { useActiveProfile } from "@/hooks/useActiveProfile";
 
 interface HealthScoreData {
   score: number;
@@ -39,11 +41,15 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
   const [healthData, setHealthData] = useState<HealthScoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { activeProfileId, activeProfileName, isViewingSelf } = useActiveProfile();
 
   useEffect(() => {
     async function fetchHealthScore() {
       try {
-        const res = await fetch("/api/health-score");
+        const url = activeProfileId
+          ? `/api/health-score?family_member_id=${activeProfileId}`
+          : "/api/health-score";
+        const res = await fetch(url);
         if (!res.ok) {
           setError(true);
           return;
@@ -57,7 +63,7 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
       }
     }
     fetchHealthScore();
-  }, []);
+  }, [activeProfileId]);
 
   const firstName = displayName.split(/\s+/)[0];
 
@@ -67,7 +73,14 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
       <div className="dashboard__col-left">
         {/* Welcome + Quick Actions */}
         <div className="db-card">
-          <h2 className="db-welcome__heading">Welcome back, {firstName}!</h2>
+          <div className="db-welcome__row">
+            <h2 className="db-welcome__heading">
+              {isViewingSelf
+                ? `Welcome back, ${firstName}!`
+                : `Viewing: ${activeProfileName}'s Health`}
+            </h2>
+            <ProfileSwitcher />
+          </div>
           <div className="db-actions">
             <Link href="/upload" className="db-action">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -116,7 +129,7 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
         )}
 
         {/* Recent Reports */}
-        <RecentReports />
+        <RecentReports activeProfileId={activeProfileId} />
       </div>
 
       {/* Right Column */}
