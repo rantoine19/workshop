@@ -6,6 +6,7 @@ export type AuditAction =
   | "report.view"
   | "report.parse"
   | "report.delete"
+  | "report.export_summary"
   | "chat.message"
   | "chat.delete"
   | "chat.export_summary"
