@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
@@ -58,6 +58,14 @@ function getDateFilterCutoff(filter: DateFilter): Date | null {
 }
 
 export default function ComparePage() {
+  return (
+    <Suspense fallback={<div className="compare-page">Loading...</div>}>
+      <CompareContent />
+    </Suspense>
+  );
+}
+
+function CompareContent() {
   const searchParams = useSearchParams();
 
   const [reports, setReports] = useState<Report[]>([]);

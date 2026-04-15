@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
@@ -23,6 +23,14 @@ const CATEGORY_ORDER: GlossaryEntry["category"][] = [
 ];
 
 export default function GlossaryPage() {
+  return (
+    <Suspense fallback={<div className="glossary-page">Loading...</div>}>
+      <GlossaryContent />
+    </Suspense>
+  );
+}
+
+function GlossaryContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") ?? "";
   const [query, setQuery] = useState(initialQuery);

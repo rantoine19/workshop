@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import NavHeader from "@/components/ui/NavHeader";
 
@@ -14,6 +14,14 @@ const RELATIONSHIPS = [
 ];
 
 export default function AddFamilyMemberPage() {
+  return (
+    <Suspense fallback={<div className="family-page">Loading...</div>}>
+      <AddFamilyMemberForm />
+    </Suspense>
+  );
+}
+
+function AddFamilyMemberForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
