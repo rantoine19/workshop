@@ -90,7 +90,6 @@ Search specific domains using the CLI tool below.
 
 ---
 
-
 ## Prerequisites
 
 Check if Python is installed:
