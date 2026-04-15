@@ -174,6 +174,12 @@ describe("Audit Logger", () => {
         "medication.photo_upload",
         "medication.photo_delete",
         "chat.export_summary",
+        "insurance_card.create",
+        "insurance_card.update",
+        "insurance_card.delete",
+        "insurance_card.view",
+        "insurance_card.photo_upload",
+        "insurance_card.photo_delete",
       ];
 
       const resourceTypes: Record<AuditAction, AuditResourceType> = {
@@ -191,6 +197,12 @@ describe("Audit Logger", () => {
         "medication.delete": "medication",
         "medication.photo_upload": "medication",
         "medication.photo_delete": "medication",
+        "insurance_card.create": "insurance_card",
+        "insurance_card.update": "insurance_card",
+        "insurance_card.delete": "insurance_card",
+        "insurance_card.view": "insurance_card",
+        "insurance_card.photo_upload": "insurance_card",
+        "insurance_card.photo_delete": "insurance_card",
       };
 
       for (const action of actions) {
