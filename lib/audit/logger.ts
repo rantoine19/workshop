@@ -14,9 +14,20 @@ export type AuditAction =
   | "medication.update"
   | "medication.delete"
   | "medication.photo_upload"
-  | "medication.photo_delete";
+  | "medication.photo_delete"
+  | "insurance_card.create"
+  | "insurance_card.update"
+  | "insurance_card.delete"
+  | "insurance_card.view"
+  | "insurance_card.photo_upload"
+  | "insurance_card.photo_delete";
 
-export type AuditResourceType = "report" | "chat_session" | "parsed_result" | "medication";
+export type AuditResourceType =
+  | "report"
+  | "chat_session"
+  | "parsed_result"
+  | "medication"
+  | "insurance_card";
 
 interface AuditEvent {
   userId: string;
