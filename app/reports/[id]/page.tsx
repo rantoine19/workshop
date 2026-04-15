@@ -174,6 +174,30 @@ export default function ReportResultsPage() {
         <div className="report-results__title-row">
           <h1>{report.file_name}</h1>
           <div className="report-results__header-actions">
+            {report.status === "parsed" && report.parsed_result_id && (
+              <Link
+                href={`/reports/${reportId}/clinical-summary`}
+                className="report-results__export-btn"
+                aria-label="Export clinical summary"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                </svg>
+                Export Summary
+              </Link>
+            )}
             <button
               className="report-results__reanalyze-btn report-results__reanalyze-btn--sm"
               onClick={handleReanalyze}

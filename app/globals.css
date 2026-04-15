@@ -4620,6 +4620,27 @@ button.chat-send-button[type="submit"]:disabled {
   font-size: 0.8125rem;
 }
 
+.report-results__export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: var(--color-blue-600, #2563eb);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.report-results__export-btn:hover {
+  background: var(--color-blue-700, #1d4ed8);
+  color: white;
+}
+
 .report-results__failed-actions {
   display: flex;
   gap: 0.75rem;
