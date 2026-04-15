@@ -38,6 +38,7 @@ export default async function DashboardPage() {
           <Link href="/chat" className="dashboard-header__link">Chat</Link>
           <Link href="/reports" className="dashboard-header__link">Reports</Link>
           <Link href="/medications" className="dashboard-header__link">Medications</Link>
+          <Link href="/appointments" className="dashboard-header__link">Appointments</Link>
           <Link href="/insurance" className="dashboard-header__link">Insurance</Link>
           <Link href="/family" className="dashboard-header__link">Family</Link>
           <Link href="/profile" className="dashboard-header__link">Profile</Link>
