@@ -79,18 +79,47 @@ export async function GET(request: Request) {
     );
   }
 
+  // Fetch corrections for these risk flags to mark corrected ones
+  const flagIds = riskFlags.map((f) => f.id);
+  const correctionMap = new Map<string, { original_value: number }>();
+
+  if (flagIds.length > 0) {
+    const { data: corrections } = await supabase
+      .from("biomarker_corrections")
+      .select("risk_flag_id, original_value")
+      .in("risk_flag_id", flagIds);
+
+    if (corrections) {
+      for (const c of corrections) {
+        correctionMap.set(c.risk_flag_id, {
+          original_value: c.original_value,
+        });
+      }
+    }
+  }
+
+  // Enrich risk flags with correction info
+  const enrichedFlags = riskFlags.map((f) => {
+    const correction = correctionMap.get(f.id);
+    return {
+      ...f,
+      corrected: !!correction,
+      original_value: correction?.original_value ?? null,
+    };
+  });
+
   // Build summary counts
   const summary = {
-    total: riskFlags.length,
-    green: riskFlags.filter((f) => f.flag === "green").length,
-    yellow: riskFlags.filter((f) => f.flag === "yellow").length,
-    red: riskFlags.filter((f) => f.flag === "red").length,
+    total: enrichedFlags.length,
+    green: enrichedFlags.filter((f) => f.flag === "green").length,
+    yellow: enrichedFlags.filter((f) => f.flag === "yellow").length,
+    red: enrichedFlags.filter((f) => f.flag === "red").length,
   };
 
   return NextResponse.json(
     {
       report_id: reportId,
-      risk_flags: riskFlags,
+      risk_flags: enrichedFlags,
       summary,
       disclaimer:
         "These indicators are for informational purposes only. They are not medical diagnoses. Please consult your doctor about your results.",

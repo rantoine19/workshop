@@ -21,14 +21,16 @@ export type AuditAction =
   | "insurance_card.delete"
   | "insurance_card.view"
   | "insurance_card.photo_upload"
-  | "insurance_card.photo_delete";
+  | "insurance_card.photo_delete"
+  | "biomarker.correct";
 
 export type AuditResourceType =
   | "report"
   | "chat_session"
   | "parsed_result"
   | "medication"
-  | "insurance_card";
+  | "insurance_card"
+  | "risk_flag";
 
 interface AuditEvent {
   userId: string;
