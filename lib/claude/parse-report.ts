@@ -1,5 +1,5 @@
 import { getClaudeClient } from "./client";
-import { PARSE_REPORT_SYSTEM_PROMPT, PARSE_REPORT_USER_PROMPT } from "./prompts";
+import { PARSE_REPORT_USER_PROMPT, buildParsePrompt } from "./prompts";
 import Anthropic from "@anthropic-ai/sdk";
 
 export interface ParsedBiomarker {
@@ -16,15 +16,22 @@ export interface ParsedReportResult {
   biomarkers: ParsedBiomarker[];
   summary: string;
   report_date: string | null;
+  /** Lab provider identified by Claude from document header/footer (#134) */
+  report_source?: string | null;
 }
 
 /**
  * Sends a medical report (as base64 image or PDF) to Claude Vision
  * and returns structured extraction results.
+ *
+ * @param fileBase64 - Base64-encoded file content
+ * @param mediaType - MIME type of the file
+ * @param labHints - Optional format-specific hints from lab detection (#134)
  */
 export async function parseReportWithClaude(
   fileBase64: string,
-  mediaType: "image/jpeg" | "image/png" | "application/pdf"
+  mediaType: "image/jpeg" | "image/png" | "application/pdf",
+  labHints?: string
 ): Promise<ParsedReportResult> {
   const client = getClaudeClient();
 
@@ -47,10 +54,12 @@ export async function parseReportWithClaude(
           },
         };
 
+  const systemPrompt = buildParsePrompt(labHints);
+
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",
     max_tokens: 4096,
-    system: PARSE_REPORT_SYSTEM_PROMPT,
+    system: systemPrompt,
     messages: [
       {
         role: "user",

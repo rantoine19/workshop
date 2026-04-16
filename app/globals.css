@@ -3769,6 +3769,17 @@ button.chat-send-button[type="submit"]:disabled {
   color: #991b1b;
 }
 
+.report-results__lab-provider {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--color-blue-100, #dbeafe);
+  color: var(--color-blue-800, #1e40af);
+  margin-left: 0.5rem;
+}
+
 .report-results__pending {
   text-align: center;
   padding: 2rem 1rem;

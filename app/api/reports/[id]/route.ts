@@ -99,7 +99,7 @@ export async function GET(
   const { data: report, error: reportError } = await supabase
     .from("reports")
     .select(
-      "id, user_id, original_filename, file_type, status, created_at, parsed_results(id)"
+      "id, user_id, original_filename, file_type, status, created_at, lab_provider, parsed_results(id)"
     )
     .eq("id", reportId)
     .single();
@@ -140,6 +140,7 @@ export async function GET(
         status: report.status,
         created_at: report.created_at,
         parsed_result_id: parsedResultId,
+        lab_provider: (report as Record<string, unknown>).lab_provider ?? null,
       },
     },
     { status: 200 }
