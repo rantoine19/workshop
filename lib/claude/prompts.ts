@@ -31,12 +31,16 @@ Respond ONLY with valid JSON in this exact format:
 
 /**
  * Build the final parse prompt, optionally appending format-specific hints
- * when a lab provider has been detected via keyword matching (#134).
+ * when a lab provider has been detected via keyword matching (#134),
+ * and few-shot examples from the extraction example library (#135).
  */
-export function buildParsePrompt(labHints?: string): string {
+export function buildParsePrompt(labHints?: string, fewShotExamples?: string): string {
   let prompt = PARSE_REPORT_SYSTEM_PROMPT;
   if (labHints) {
     prompt += `\n\nFORMAT HINTS: This report appears to be from a specific lab provider. ${labHints}`;
+  }
+  if (fewShotExamples) {
+    prompt += `\n\n${fewShotExamples}`;
   }
   return prompt;
 }

@@ -26,12 +26,12 @@ export interface ParsedReportResult {
  *
  * @param fileBase64 - Base64-encoded file content
  * @param mediaType - MIME type of the file
- * @param labHints - Optional format-specific hints from lab detection (#134)
+ * @param systemPromptOverride - Optional pre-built system prompt (includes hints + few-shot examples from #135)
  */
 export async function parseReportWithClaude(
   fileBase64: string,
   mediaType: "image/jpeg" | "image/png" | "application/pdf",
-  labHints?: string
+  systemPromptOverride?: string
 ): Promise<ParsedReportResult> {
   const client = getClaudeClient();
 
@@ -54,7 +54,7 @@ export async function parseReportWithClaude(
           },
         };
 
-  const systemPrompt = buildParsePrompt(labHints);
+  const systemPrompt = systemPromptOverride ?? buildParsePrompt();
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",

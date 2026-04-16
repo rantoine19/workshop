@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { parseReportWithClaude } from "@/lib/claude/parse-report";
+import { buildParsePrompt } from "@/lib/claude/prompts";
 import { applyServerSideFlags } from "@/lib/health/flag-biomarker";
 import { normalizeBiomarkerName } from "@/lib/health/normalize-biomarker";
 import { detectLabFormatFromFilename, resolveLabProvider } from "@/lib/health/detect-lab-format";
+import { findMatchingExamples, storeExtractionExample, incrementExampleUsage } from "@/lib/health/example-library";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
@@ -118,12 +120,25 @@ export async function POST(request: Request) {
       console.log("[PARSE] Keyword detection matched:", filenameDetection.provider, "confidence:", filenameDetection.confidence);
     }
 
-    // Parse with Claude Vision (with format-specific hints if detected)
+    // Fetch few-shot examples for this lab format (#135)
+    const fewShotExamples = await findMatchingExamples(
+      supabase,
+      filenameDetection.provider,
+      report.file_type
+    );
+    if (fewShotExamples) {
+      console.log("[PARSE] Found few-shot examples for prompt augmentation");
+    }
+
+    // Build system prompt with hints + few-shot examples (#134 + #135)
+    const systemPrompt = buildParsePrompt(filenameDetection.hints, fewShotExamples || undefined);
+
+    // Parse with Claude Vision
     console.log("[PARSE] File downloaded, size:", arrayBuffer.byteLength, "bytes. Sending to Claude Vision...");
     const parsed = await parseReportWithClaude(
       base64,
       mediaType as "application/pdf" | "image/png" | "image/jpeg",
-      filenameDetection.hints
+      systemPrompt
     );
 
     console.log("[PARSE] Claude returned", parsed.biomarkers.length, "biomarkers. Applying server-side risk flags...");
@@ -262,6 +277,20 @@ export async function POST(request: Request) {
       .from("reports")
       .update(reportUpdate)
       .eq("id", report.id);
+
+    // Few-shot example library: store anonymized extraction + track usage (#135)
+    // Fire-and-forget — errors here should not break the parse pipeline.
+    const finalLabProvider = labProvider.provider;
+    storeExtractionExample(supabase, finalLabProvider, report.file_type, parsed.biomarkers)
+      .then((stored) => {
+        if (stored) console.log("[FEW-SHOT] Stored new extraction example for provider:", finalLabProvider ?? "unknown");
+      })
+      .catch((err) => console.error("[FEW-SHOT] Error storing example:", err));
+
+    if (fewShotExamples) {
+      incrementExampleUsage(supabase, filenameDetection.provider, report.file_type)
+        .catch((err) => console.error("[FEW-SHOT] Error incrementing usage:", err));
+    }
 
     // Audit log: report parse (fire-and-forget)
     logAuditEvent({
