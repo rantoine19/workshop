@@ -16,6 +16,7 @@ interface ReportData {
   status: string;
   created_at: string;
   parsed_result_id: string | null;
+  lab_provider: string | null;
 }
 
 export default function ReportResultsPage() {
@@ -233,6 +234,11 @@ export default function ReportResultsPage() {
                   ? "Pending"
                   : "Error"}
           </span>
+          {report.lab_provider && (
+            <span className="report-results__lab-provider" title="Detected lab provider">
+              {report.lab_provider}
+            </span>
+          )}
         </p>
       </div>
 

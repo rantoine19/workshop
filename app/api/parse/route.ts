@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseReportWithClaude } from "@/lib/claude/parse-report";
 import { applyServerSideFlags } from "@/lib/health/flag-biomarker";
 import { normalizeBiomarkerName } from "@/lib/health/normalize-biomarker";
+import { detectLabFormatFromFilename, resolveLabProvider } from "@/lib/health/detect-lab-format";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
@@ -111,11 +112,18 @@ export async function POST(request: Request) {
           ? "image/png"
           : "image/jpeg";
 
-    // Parse with Claude Vision
+    // Pass 1: Keyword-based lab format detection from filename (#134)
+    const filenameDetection = detectLabFormatFromFilename(report.file_path);
+    if (filenameDetection.provider) {
+      console.log("[PARSE] Keyword detection matched:", filenameDetection.provider, "confidence:", filenameDetection.confidence);
+    }
+
+    // Parse with Claude Vision (with format-specific hints if detected)
     console.log("[PARSE] File downloaded, size:", arrayBuffer.byteLength, "bytes. Sending to Claude Vision...");
     const parsed = await parseReportWithClaude(
       base64,
-      mediaType as "application/pdf" | "image/png" | "image/jpeg"
+      mediaType as "application/pdf" | "image/png" | "image/jpeg",
+      filenameDetection.hints
     );
 
     console.log("[PARSE] Claude returned", parsed.biomarkers.length, "biomarkers. Applying server-side risk flags...");
@@ -230,10 +238,25 @@ export async function POST(request: Request) {
       console.log("[PARSE] No risk flags to insert (all biomarkers filtered out)");
     }
 
-    // Update report status to 'parsed' and store extracted report_date
-    const reportUpdate: { status: string; report_date?: string } = { status: "parsed" };
+    // Resolve lab provider: prefer Claude's identification over keyword match (#134)
+    const labProvider = resolveLabProvider(filenameDetection, parsed.report_source);
+    if (labProvider.provider) {
+      console.log("[PARSE] Final lab provider:", labProvider.provider, "confidence:", labProvider.confidence);
+    }
+
+    // Update report status to 'parsed' and store extracted report_date + lab provider
+    const reportUpdate: {
+      status: string;
+      report_date?: string;
+      lab_provider?: string;
+      lab_format_confidence?: number;
+    } = { status: "parsed" };
     if (parsed.report_date) {
       reportUpdate.report_date = parsed.report_date;
+    }
+    if (labProvider.provider) {
+      reportUpdate.lab_provider = labProvider.provider;
+      reportUpdate.lab_format_confidence = labProvider.confidence;
     }
     await supabase
       .from("reports")
@@ -255,6 +278,8 @@ export async function POST(request: Request) {
         biomarker_count: parsed.biomarkers.length,
         risk_flags_count: riskFlags.length,
         summary: parsed.summary,
+        lab_provider: labProvider.provider,
+        lab_format_confidence: labProvider.confidence,
       },
       { status: 200 }
     );

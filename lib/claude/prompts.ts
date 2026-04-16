@@ -25,8 +25,21 @@ Respond ONLY with valid JSON in this exact format:
     }
   ],
   "summary": "string — 1-3 sentence plain-language summary of the report contents, written at a 5th grade reading level",
-  "report_date": "string or null — the date the lab test was performed or the report was issued, in YYYY-MM-DD format. Extract from the document content (look for collection date, test date, report date, or similar). Return null if no date found."
+  "report_date": "string or null — the date the lab test was performed or the report was issued, in YYYY-MM-DD format. Extract from the document content (look for collection date, test date, report date, or similar). Return null if no date found.",
+  "report_source": "string or null — the lab provider name if visible in the document header, footer, or letterhead (e.g., Quest Diagnostics, LabCorp, Mayo Clinic Laboratories). Return null if not identifiable."
 }`;
+
+/**
+ * Build the final parse prompt, optionally appending format-specific hints
+ * when a lab provider has been detected via keyword matching (#134).
+ */
+export function buildParsePrompt(labHints?: string): string {
+  let prompt = PARSE_REPORT_SYSTEM_PROMPT;
+  if (labHints) {
+    prompt += `\n\nFORMAT HINTS: This report appears to be from a specific lab provider. ${labHints}`;
+  }
+  return prompt;
+}
 
 export const PARSE_REPORT_USER_PROMPT =
   "Extract all biomarkers, lab values, and test results from this medical report. Return structured JSON only.";
