@@ -160,10 +160,57 @@ HEALTH CREDIT SCORE: ${healthScore.score}/850 (${healthScore.label})
 Breakdown: ${healthScore.breakdown.green} normal, ${healthScore.breakdown.yellow} borderline, ${healthScore.breakdown.red} needs attention
 ${healthScore.topConcerns.length > 0 ? `Top concerns: ${healthScore.topConcerns.join(", ")}` : ""}`;
 
+  // Load chat conversations tied to this report so the summary can
+  // integrate patient-raised concerns alongside the raw lab data.
+  const { data: chatSessions } = await supabase
+    .from("chat_sessions")
+    .select("id, title, created_at")
+    .eq("user_id", user.id)
+    .eq("report_id", reportId)
+    .order("created_at", { ascending: false });
+
+  let chatContext = "";
+  if (chatSessions && chatSessions.length > 0) {
+    const sessionIds = chatSessions.map((s) => s.id);
+    const { data: messages } = await supabase
+      .from("chat_messages")
+      .select("session_id, role, content, created_at")
+      .in("session_id", sessionIds)
+      .order("created_at", { ascending: true });
+
+    if (messages && messages.length > 0) {
+      const lines: string[] = [
+        "",
+        "",
+        "PATIENT CHAT CONVERSATIONS ABOUT THIS REPORT:",
+      ];
+      for (const session of chatSessions) {
+        const sessionMsgs = messages.filter((m) => m.session_id === session.id);
+        if (sessionMsgs.length === 0) continue;
+        const dateLabel = new Date(session.created_at)
+          .toISOString()
+          .slice(0, 10);
+        lines.push("", `Session from ${dateLabel}:`);
+        for (const msg of sessionMsgs) {
+          const role = msg.role === "user" ? "Patient" : "AI Assistant";
+          lines.push(`${role}: ${msg.content}`);
+        }
+      }
+      // Only attach the block if at least one session actually had messages.
+      if (lines.length > 3) {
+        chatContext = lines.join("\n");
+      }
+    }
+  }
+
   let systemPrompt = REPORT_SUMMARY_SYSTEM_PROMPT;
   if (healthContext) {
     systemPrompt += `\n\n${healthContext}`;
   }
+
+  const userMessage = chatContext
+    ? `Here is the lab report to summarize:\n\n${reportBlock}${chatContext}`
+    : `Here is the lab report to summarize:\n\n${reportBlock}`;
 
   // Call Claude to generate the structured summary
   const claude = getClaudeClient();
@@ -176,7 +223,7 @@ ${healthScore.topConcerns.length > 0 ? `Top concerns: ${healthScore.topConcerns.
       messages: [
         {
           role: "user",
-          content: `Here is the lab report to summarize:\n\n${reportBlock}`,
+          content: userMessage,
         },
       ],
     });

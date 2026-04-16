@@ -86,6 +86,92 @@ describe("Report Clinical Summary Export (#151)", () => {
         "a doctor should read this in 3 minutes"
       );
     });
+
+    it("includes conditional PATIENT CONCERNS DISCUSSED section for chat", () => {
+      expect(REPORT_SUMMARY_SYSTEM_PROMPT).toContain(
+        "PATIENT CONCERNS DISCUSSED"
+      );
+    });
+
+    it("includes DISCUSSION POINTS FROM CHAT section", () => {
+      expect(REPORT_SUMMARY_SYSTEM_PROMPT).toContain(
+        "DISCUSSION POINTS FROM CHAT"
+      );
+    });
+
+    it("includes QUESTIONS PATIENT WANTS TO ASK DOCTOR section", () => {
+      expect(REPORT_SUMMARY_SYSTEM_PROMPT).toContain(
+        "QUESTIONS PATIENT WANTS TO ASK DOCTOR"
+      );
+    });
+
+    it("instructs to focus on lab data only when no chat exists", () => {
+      expect(REPORT_SUMMARY_SYSTEM_PROMPT).toContain(
+        "omit the \"PATIENT CONCERNS DISCUSSED\" and \"DISCUSSION POINTS FROM CHAT\" sections entirely"
+      );
+    });
+
+    it("prohibits quoting chat messages verbatim", () => {
+      expect(REPORT_SUMMARY_SYSTEM_PROMPT).toContain(
+        "Do NOT"
+      );
+      expect(REPORT_SUMMARY_SYSTEM_PROMPT).toContain(
+        "summarize them"
+      );
+    });
+  });
+
+  describe("API route chat integration", () => {
+    const routeSrc = fs.readFileSync(
+      path.resolve(
+        process.cwd(),
+        "app/api/reports/[id]/clinical-summary/route.ts"
+      ),
+      "utf-8"
+    );
+
+    it("loads chat_sessions filtered by report_id and user_id", () => {
+      expect(routeSrc).toContain('.from("chat_sessions")');
+      expect(routeSrc).toContain('.eq("report_id", reportId)');
+      expect(routeSrc).toContain('.eq("user_id", user.id)');
+    });
+
+    it("loads chat_messages for the discovered sessions", () => {
+      expect(routeSrc).toContain('.from("chat_messages")');
+      expect(routeSrc).toContain('.in("session_id"');
+    });
+
+    it("only appends chat context when sessions exist", () => {
+      // Guard clause ensures empty sessions list does not break the API
+      expect(routeSrc).toMatch(
+        /chatSessions && chatSessions\.length > 0/
+      );
+    });
+
+    it("only appends chat context when messages exist", () => {
+      // Guard clause ensures sessions without any messages do not break the API
+      expect(routeSrc).toMatch(/messages && messages\.length > 0/);
+    });
+
+    it("passes chat context to Claude via the user message", () => {
+      expect(routeSrc).toContain("chatContext");
+      expect(routeSrc).toContain("userMessage");
+    });
+
+    it("labels chat turns as Patient / AI Assistant (no internal IDs leaked)", () => {
+      expect(routeSrc).toContain('"Patient"');
+      expect(routeSrc).toContain('"AI Assistant"');
+      // Must not select or expose chat message IDs in the transcript
+      expect(routeSrc).not.toMatch(
+        /select\(\s*"[^"]*\bid\b[^"]*"\s*\)\s*\.in\("session_id"/
+      );
+    });
+
+    it("uses the PATIENT CHAT CONVERSATIONS header", () => {
+      expect(routeSrc).toContain(
+        "PATIENT CHAT CONVERSATIONS ABOUT THIS REPORT:"
+      );
+    });
   });
 
   describe("disclaimer", () => {
