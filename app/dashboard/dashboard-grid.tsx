@@ -9,6 +9,7 @@ import { RecentReports } from "./recent-reports";
 import { QuickStats } from "./quick-stats";
 import { DailyTip } from "./daily-tip";
 import { UpcomingAppointments } from "./upcoming-appointments";
+import { RemindersCard } from "./reminders-card";
 import ProfileSwitcher from "@/components/ui/ProfileSwitcher";
 import { useActiveProfile } from "@/hooks/useActiveProfile";
 
@@ -72,6 +73,9 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
     <div className="dashboard__grid">
       {/* Left Column */}
       <div className="dashboard__col-left">
+        {/* Smart Reminders */}
+        <RemindersCard />
+
         {/* Welcome + Quick Actions */}
         <div className="db-card">
           <div className="db-welcome__row">

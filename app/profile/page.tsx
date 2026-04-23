@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import NavHeader from "@/components/ui/NavHeader";
 import Avatar from "@/components/ui/Avatar";
+import { REMINDER_FREQUENCIES, type ReminderFrequency } from "@/lib/health/reminders";
 
 const CONDITIONS_OPTIONS = [
   "Diabetes",
@@ -38,6 +39,8 @@ interface ProfileData {
   family_history: string[];
   activity_level: string | null;
   sleep_hours: string | null;
+  reminder_frequency: string | null;
+  reminders_enabled: boolean | null;
   updated_at: string | null;
 }
 
@@ -69,6 +72,8 @@ export default function ProfilePage() {
   const [familyHistory, setFamilyHistory] = useState<string[]>([]);
   const [activityLevel, setActivityLevel] = useState("");
   const [sleepHours, setSleepHours] = useState("");
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [reminderFrequency, setReminderFrequency] = useState<ReminderFrequency>("daily");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -94,6 +99,10 @@ export default function ProfilePage() {
       setFamilyHistory(data.profile.family_history || []);
       setActivityLevel(data.profile.activity_level || "");
       setSleepHours(data.profile.sleep_hours || "");
+      setRemindersEnabled(data.profile.reminders_enabled ?? true);
+      setReminderFrequency(
+        (data.profile.reminder_frequency as ReminderFrequency) || "daily"
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile");
     } finally {
@@ -220,6 +229,8 @@ export default function ProfilePage() {
           family_history: familyHistory,
           activity_level: activityLevel || null,
           sleep_hours: sleepHours || null,
+          reminders_enabled: remindersEnabled,
+          reminder_frequency: reminderFrequency,
         }),
       });
 
@@ -505,6 +516,61 @@ export default function ProfilePage() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Reminders Section */}
+        <div className="profile-section" id="reminders">
+          <h2 className="profile-section__heading">Reminders</h2>
+          <p className="profile-section__description">
+            Get smart reminders based on your health data. We will never spam you.
+          </p>
+
+          <div className="profile-page__field">
+            <label className="reminder-settings__toggle-label">
+              <input
+                type="checkbox"
+                checked={remindersEnabled}
+                onChange={(e) => setRemindersEnabled(e.target.checked)}
+                className="reminder-settings__checkbox"
+              />
+              <span>Enable reminders</span>
+            </label>
+          </div>
+
+          {remindersEnabled && (
+            <div className="profile-page__field">
+              <label>Frequency</label>
+              <div className="reminder-settings__frequency">
+                {REMINDER_FREQUENCIES.map((freq) => (
+                  <label
+                    key={freq.value}
+                    className={`reminder-settings__option ${
+                      reminderFrequency === freq.value
+                        ? "reminder-settings__option--active"
+                        : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reminder_frequency"
+                      value={freq.value}
+                      checked={reminderFrequency === freq.value}
+                      onChange={(e) =>
+                        setReminderFrequency(e.target.value as ReminderFrequency)
+                      }
+                      className="reminder-settings__radio"
+                    />
+                    <span className="reminder-settings__option-label">
+                      {freq.label}
+                    </span>
+                    <span className="reminder-settings__option-desc">
+                      {freq.description}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <button
