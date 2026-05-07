@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogoutButton } from "./logout-button";
 import Logo from "@/components/ui/Logo";
 import Avatar from "@/components/ui/Avatar";
+import NotificationBell from "@/components/ui/NotificationBell";
 import { DashboardGrid } from "./dashboard-grid";
 
 export const dynamic = "force-dynamic";
@@ -41,9 +42,11 @@ export default async function DashboardPage() {
           <Link href="/appointments" className="dashboard-header__link">Appointments</Link>
           <Link href="/insurance" className="dashboard-header__link">Insurance</Link>
           <Link href="/family" className="dashboard-header__link">Family</Link>
+          <Link href="/settings/notifications" className="dashboard-header__link">Settings</Link>
           <Link href="/profile" className="dashboard-header__link">Profile</Link>
         </nav>
         <div className="dashboard-header__right">
+          <NotificationBell />
           <Avatar
             avatarUrl={profile.avatar_url}
             displayName={profile.display_name}

@@ -131,12 +131,19 @@ describe("Upload Page — auto-parse flow", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    // Wrap mockFetch to auto-handle NavHeader's /api/profile calls
+    // Wrap mockFetch to auto-handle NavHeader's /api/profile and
+    // NotificationBell's /api/notifications/log calls
     vi.spyOn(globalThis, "fetch").mockImplementation(
       (input: string | URL | Request, ...args: unknown[]) => {
         const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
         if (url === "/api/profile") {
           return Promise.resolve(profileResponse as Response);
+        }
+        if (url === "/api/notifications/log") {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({ notifications: [], unreadCount: 0 }),
+          } as Response);
         }
         return mockFetch(input, ...args);
       }

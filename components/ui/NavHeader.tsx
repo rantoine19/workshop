@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "./Logo";
 import Avatar from "./Avatar";
+import NotificationBell from "./NotificationBell";
 
 interface NavHeaderProps {
   showBack?: boolean;
@@ -84,6 +85,12 @@ export default function NavHeader({
         <Link href="/glossary" className={linkClass("/glossary")}>
           Glossary
         </Link>
+        <Link
+          href="/settings/notifications"
+          className={linkClass("/settings/notifications")}
+        >
+          Settings
+        </Link>
         <Link href="/profile" className={linkClass("/profile")}>
           <span className="nav-header__profile-link">
             {profileInfo && (
@@ -97,6 +104,9 @@ export default function NavHeader({
           </span>
         </Link>
       </nav>
+      <div className="nav-header__right">
+        <NotificationBell />
+      </div>
     </header>
   );
 }

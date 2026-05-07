@@ -23,8 +23,10 @@ const VALID_FAMILY_HISTORY = [
   "None",
 ];
 
+const VALID_REMINDER_FREQUENCIES = ["twice_daily", "daily", "weekly"];
+
 const PROFILE_SELECT =
-  "id, display_name, date_of_birth, gender, avatar_url, height_inches, known_conditions, medications, smoking_status, family_history, activity_level, sleep_hours, updated_at";
+  "id, display_name, date_of_birth, gender, avatar_url, height_inches, known_conditions, medications, smoking_status, family_history, activity_level, sleep_hours, reminder_frequency, reminders_enabled, updated_at";
 
 export async function GET() {
   const supabase = await createClient();
@@ -67,6 +69,8 @@ export async function GET() {
         family_history: [],
         activity_level: null,
         sleep_hours: null,
+        reminder_frequency: "daily",
+        reminders_enabled: true,
         updated_at: null,
       },
     },
@@ -97,6 +101,8 @@ export async function PUT(request: Request) {
     family_history?: string[];
     activity_level?: string | null;
     sleep_hours?: string | null;
+    reminder_frequency?: string | null;
+    reminders_enabled?: boolean;
   };
   try {
     body = await request.json();
@@ -250,6 +256,26 @@ export async function PUT(request: Request) {
     }
   }
 
+  // Validate reminder_frequency
+  if (body.reminder_frequency !== undefined && body.reminder_frequency !== null) {
+    if (!VALID_REMINDER_FREQUENCIES.includes(body.reminder_frequency)) {
+      return NextResponse.json(
+        { error: `reminder_frequency must be one of: ${VALID_REMINDER_FREQUENCIES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Validate reminders_enabled
+  if (body.reminders_enabled !== undefined) {
+    if (typeof body.reminders_enabled !== "boolean") {
+      return NextResponse.json(
+        { error: "reminders_enabled must be a boolean" },
+        { status: 400 }
+      );
+    }
+  }
+
   // Build update object — only include provided fields
   const updateData: Record<string, unknown> = {
     id: user.id,
@@ -285,6 +311,12 @@ export async function PUT(request: Request) {
   }
   if (body.sleep_hours !== undefined) {
     updateData.sleep_hours = body.sleep_hours;
+  }
+  if (body.reminder_frequency !== undefined) {
+    updateData.reminder_frequency = body.reminder_frequency;
+  }
+  if (body.reminders_enabled !== undefined) {
+    updateData.reminders_enabled = body.reminders_enabled;
   }
 
   // Upsert profile — creates if not exists, updates if exists
