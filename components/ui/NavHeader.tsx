@@ -82,6 +82,9 @@ export default function NavHeader({
         <Link href="/family" className={linkClass("/family")}>
           Family
         </Link>
+        <Link href="/tips" className={linkClass("/tips")}>
+          Tips
+        </Link>
         <Link href="/glossary" className={linkClass("/glossary")}>
           Glossary
         </Link>
