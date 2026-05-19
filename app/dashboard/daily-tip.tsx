@@ -1,174 +1,200 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  selectDailyTip,
+  type DailyTip as DailyTipModel,
+  type UserContext,
+} from "@/lib/health/daily-tips";
 
 /**
- * Category emojis for fun visual flair.
+ * The shape of interaction state returned by /api/tips/interactions (GET).
  */
-const CATEGORY_EMOJIS: Record<string, string> = {
-  cholesterol: "\u2764\ufe0f",
-  glucose: "\ud83c\udf6c",
-  blood_pressure: "\ud83e\ude78",
-  liver: "\ud83e\udec0",
-  kidney: "\ud83e\udea8",
-  thyroid: "\ud83e\udd8b",
-  iron: "\ud83e\uddf2",
-  general: "\u2728",
-};
-
-/**
- * Daily health tips organized by biomarker category.
- * Tips are specific, actionable, and evidence-based.
- */
-const TIPS_BY_CATEGORY: Record<string, string[]> = {
-  cholesterol: [
-    "Replace butter with olive oil this week — it can lower LDL by up to 10%.",
-    "Eating 2 servings of fatty fish per week can improve your cholesterol profile.",
-    "A handful of almonds daily may reduce LDL cholesterol by 5-10%.",
-    "Oats contain beta-glucan fiber that binds cholesterol in the gut — try oatmeal for breakfast.",
-    "Avocados are rich in monounsaturated fats that help raise HDL and lower LDL.",
-  ],
-  glucose: [
-    "Walking 30 minutes after meals can lower blood sugar by up to 30%.",
-    "Cinnamon may improve insulin sensitivity — try adding it to your morning coffee.",
-    "Eating protein before carbs at meals can reduce post-meal glucose spikes by 30-40%.",
-    "Getting 7-8 hours of sleep helps regulate blood sugar — even one bad night raises it.",
-    "Apple cider vinegar before meals may improve insulin sensitivity by up to 34%.",
-  ],
-  blood_pressure: [
-    "Try deep breathing for 5 minutes — it can lower blood pressure by 5-10 points.",
-    "Reducing sodium to under 2,300mg/day can lower blood pressure by 5-6 mmHg.",
-    "Potassium-rich foods like bananas and sweet potatoes help counterbalance sodium.",
-    "Regular walking for 30 minutes can lower systolic blood pressure by 4-9 mmHg.",
-    "Dark chocolate (70%+) in small amounts may lower blood pressure by 2-3 points.",
-  ],
-  liver: [
-    "Your liver regenerates — cutting back on alcohol for 2 weeks can start improving enzyme levels.",
-    "Coffee (2-3 cups/day) is associated with lower liver enzyme levels and reduced liver disease risk.",
-    "Milk thistle is one of the most studied supplements for liver health — ask your doctor about it.",
-    "Excess sugar is converted to fat in the liver — reducing added sugars helps liver function.",
-  ],
-  kidney: [
-    "Staying hydrated helps your kidneys filter waste — aim for 8 glasses of water daily.",
-    "Limiting processed foods reduces sodium and phosphorus load on your kidneys.",
-    "Berries are kidney-friendly fruits packed with antioxidants and low in potassium.",
-  ],
-  thyroid: [
-    "Brazil nuts contain selenium, which supports thyroid hormone production — just 2 per day.",
-    "Iodized salt provides iodine essential for thyroid function — check your salt label.",
-    "Stress management helps thyroid function — cortisol can interfere with thyroid hormones.",
-  ],
-  iron: [
-    "Vitamin C dramatically increases iron absorption — pair iron-rich foods with citrus.",
-    "Cooking in a cast-iron skillet can increase the iron content of your food.",
-    "Tea and coffee can block iron absorption — wait 1 hour after meals before drinking them.",
-  ],
-  general: [
-    "Drink a glass of water first thing in the morning to kickstart your metabolism.",
-    "Eating the rainbow — colorful fruits and vegetables — provides diverse antioxidants.",
-    "Just 10 minutes of sunlight daily helps your body produce vitamin D naturally.",
-    "Fiber feeds your gut microbiome — aim for 25-30g per day from whole foods.",
-    "Stress reduction is medicine — even 5 minutes of meditation daily makes a measurable difference.",
-    "Laughing for 15 minutes burns about 40 calories and releases endorphins.",
-    "Standing up every 30 minutes reduces metabolic risk even if you exercise regularly.",
-    "Eating dinner 3 hours before bed improves digestion and sleep quality.",
-    "Cold showers for 30 seconds can boost your immune system and improve circulation.",
-    "Chewing food slowly (20-30 times) aids digestion and helps you eat less.",
-  ],
-};
-
-/**
- * Map biomarker names to tip categories using keyword matching.
- */
-function getCategoriesFromBiomarkers(
-  concerns: Array<{ name: string; flag: string }>
-): string[] {
-  const categories = new Set<string>();
-
-  for (const c of concerns) {
-    const lower = c.name.toLowerCase();
-    if (
-      lower.includes("cholesterol") ||
-      lower.includes("ldl") ||
-      lower.includes("hdl") ||
-      lower.includes("triglyceride")
-    ) {
-      categories.add("cholesterol");
-    }
-    if (lower.includes("glucose") || lower.includes("a1c") || lower.includes("hba1c")) {
-      categories.add("glucose");
-    }
-    if (
-      lower.includes("blood pressure") ||
-      lower.includes("systolic") ||
-      lower.includes("diastolic")
-    ) {
-      categories.add("blood_pressure");
-    }
-    if (lower.includes("alt") || lower.includes("ast") || lower.includes("liver") || lower.includes("bilirubin")) {
-      categories.add("liver");
-    }
-    if (lower.includes("creatinine") || lower.includes("bun") || lower.includes("gfr")) {
-      categories.add("kidney");
-    }
-    if (lower.includes("tsh") || lower.includes("t3") || lower.includes("t4") || lower.includes("thyroid")) {
-      categories.add("thyroid");
-    }
-    if (lower.includes("iron") || lower.includes("ferritin") || lower.includes("hemoglobin")) {
-      categories.add("iron");
-    }
-  }
-
-  return Array.from(categories);
+interface InteractionState {
+  favorites: string[];
+  dismissed: string[];
+  completedToday: string[];
+  streak: number;
 }
 
-interface TipWithCategory {
-  tip: string;
-  category: string;
-  emoji: string;
-}
-
-/**
- * Build the full tip pool with category info.
- */
-function buildTipPool(
-  concerns: Array<{ name: string; flag: string }>
-): TipWithCategory[] {
-  const categories = getCategoriesFromBiomarkers(concerns);
-  const pool: TipWithCategory[] = [];
-
-  for (const cat of categories) {
-    if (TIPS_BY_CATEGORY[cat]) {
-      for (const tip of TIPS_BY_CATEGORY[cat]) {
-        pool.push({ tip, category: cat, emoji: CATEGORY_EMOJIS[cat] || "\u2728" });
-      }
-    }
-  }
-  for (const tip of TIPS_BY_CATEGORY.general) {
-    pool.push({ tip, category: "general", emoji: CATEGORY_EMOJIS.general });
-  }
-
-  return pool;
+interface ProfilePayload {
+  date_of_birth?: string | null;
+  gender?: string | null;
+  known_conditions?: string[] | null;
+  smoking_status?: string | null;
+  activity_level?: string | null;
+  sleep_hours?: string | null;
 }
 
 interface DailyTipProps {
   concerns: Array<{ name: string; flag: string }>;
 }
 
+function ageFromDob(dob: string | null | undefined): number | undefined {
+  if (!dob) return undefined;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return undefined;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+  return age;
+}
+
 export function DailyTip({ concerns }: DailyTipProps) {
-  const pool = buildTipPool(concerns);
-  const dayOfYear = Math.floor(
-    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-      (1000 * 60 * 60 * 24)
+  const [profile, setProfile] = useState<ProfilePayload | null>(null);
+  const [interactions, setInteractions] = useState<InteractionState>({
+    favorites: [],
+    dismissed: [],
+    completedToday: [],
+    streak: 0,
+  });
+  const [offset, setOffset] = useState(0);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  // Fetch profile + interaction state on mount.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      const [profileRes, intRes] = await Promise.all([
+        fetch("/api/profile").catch(() => null),
+        fetch("/api/tips/interactions").catch(() => null),
+      ]);
+
+      if (!cancelled && profileRes?.ok) {
+        try {
+          const json = await profileRes.json();
+          setProfile(json.profile ?? null);
+        } catch {
+          /* ignore */
+        }
+      }
+      if (!cancelled && intRes?.ok) {
+        try {
+          const json = await intRes.json();
+          setInteractions({
+            favorites: json.favorites ?? [],
+            dismissed: json.dismissed ?? [],
+            completedToday: json.completedToday ?? [],
+            streak: json.streak ?? 0,
+          });
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Build user context for personalization.
+  const userContext: UserContext = useMemo(() => {
+    return {
+      concerns,
+      conditions: profile?.known_conditions ?? [],
+      age: ageFromDob(profile?.date_of_birth ?? null),
+      gender: (profile?.gender === "male" || profile?.gender === "female")
+        ? profile.gender
+        : undefined,
+      activityLevel: profile?.activity_level ?? undefined,
+      smokingStatus: profile?.smoking_status ?? undefined,
+      sleepHours: profile?.sleep_hours ?? undefined,
+      dismissedTipIds: new Set(interactions.dismissed),
+    };
+  }, [concerns, profile, interactions.dismissed]);
+
+  const selection = useMemo(
+    () => selectDailyTip(userContext, offset),
+    [userContext, offset]
   );
 
-  const [tipIndex, setTipIndex] = useState(dayOfYear % pool.length);
-  const currentTip = pool[tipIndex] || pool[0];
+  // Record a "viewed" interaction once per tip selection.
+  useEffect(() => {
+    if (!selection?.tip?.id) return;
+    void postInteraction(selection.tip.id, "viewed");
+    // We intentionally don't await or surface errors — viewed is fire-and-forget.
+  }, [selection?.tip?.id]);
+
+  const currentTip: DailyTipModel | null = selection?.tip ?? null;
+  const reasons = selection?.reasons ?? [];
+
+  const isFavorited = currentTip
+    ? interactions.favorites.includes(currentTip.id)
+    : false;
+  const isCompletedToday = currentTip
+    ? interactions.completedToday.includes(currentTip.id)
+    : false;
 
   const showNextTip = useCallback(() => {
-    setTipIndex((prev) => (prev + 1) % pool.length);
-  }, [pool.length]);
+    setOffset((prev) => prev + 1);
+  }, []);
+
+  const handleCompleted = useCallback(async () => {
+    if (!currentTip || isCompletedToday || busy) return;
+    setBusy("completed");
+
+    // Optimistic update
+    setInteractions((s) => ({
+      ...s,
+      completedToday: [...s.completedToday, currentTip.id],
+      streak: s.streak + (s.completedToday.length === 0 ? 1 : 0),
+    }));
+
+    try {
+      await postInteraction(currentTip.id, "completed");
+      // Refresh streak from server (auth-checked)
+      const res = await fetch("/api/tips/interactions").catch(() => null);
+      if (res?.ok) {
+        const json = await res.json();
+        setInteractions((s) => ({
+          ...s,
+          streak: json.streak ?? s.streak,
+          completedToday: json.completedToday ?? s.completedToday,
+        }));
+      }
+    } finally {
+      setBusy(null);
+    }
+  }, [currentTip, isCompletedToday, busy]);
+
+  const handleFavorite = useCallback(async () => {
+    if (!currentTip || busy) return;
+    setBusy("favorite");
+    const nowFavorited = !isFavorited;
+    setInteractions((s) => ({
+      ...s,
+      favorites: nowFavorited
+        ? Array.from(new Set([...s.favorites, currentTip.id]))
+        : s.favorites.filter((id) => id !== currentTip.id),
+    }));
+    try {
+      await postInteraction(
+        currentTip.id,
+        nowFavorited ? "favorited" : "unfavorited"
+      );
+    } finally {
+      setBusy(null);
+    }
+  }, [currentTip, isFavorited, busy]);
+
+  const handleDismiss = useCallback(async () => {
+    if (!currentTip || busy) return;
+    setBusy("dismiss");
+    setInteractions((s) => ({
+      ...s,
+      dismissed: Array.from(new Set([...s.dismissed, currentTip.id])),
+    }));
+    try {
+      await postInteraction(currentTip.id, "dismissed");
+    } finally {
+      setBusy(null);
+    }
+  }, [currentTip, busy]);
 
   if (!currentTip) return null;
 
@@ -179,23 +205,98 @@ export function DailyTip({ concerns }: DailyTipProps) {
           {currentTip.emoji}
         </span>
         <span className="db-card__title">Daily Health Tip</span>
+        {interactions.streak >= 2 && (
+          <span
+            className="daily-tip__streak"
+            title={`${interactions.streak}-day tip streak`}
+          >
+            <span aria-hidden="true">🔥</span>
+            {interactions.streak}-day streak
+          </span>
+        )}
       </div>
-      <p className="db-daily-tip__text">&ldquo;{currentTip.tip}&rdquo;</p>
-      <div className="db-daily-tip__footer">
+
+      <p className="db-daily-tip__text">&ldquo;{currentTip.text}&rdquo;</p>
+
+      {reasons.length > 0 && (
+        <p className="daily-tip__hint">{reasons[0]}</p>
+      )}
+
+      <div className="daily-tip__actions">
         <button
-          className="db-daily-tip__next-btn"
-          onClick={showNextTip}
           type="button"
+          className={`daily-tip__action-btn${isCompletedToday ? " daily-tip__action-btn--active" : ""}`}
+          onClick={handleCompleted}
+          disabled={isCompletedToday || busy === "completed"}
+          aria-pressed={isCompletedToday}
+          title={isCompletedToday ? "You've marked this complete today" : "Mark complete"}
         >
-          Show Another Tip &rarr;
+          <span aria-hidden="true">✓</span>
+          {isCompletedToday ? "Done today!" : "I did this today!"}
         </button>
-        <Link
-          href={`/chat?message=${encodeURIComponent("Tell me more about this health tip: " + currentTip.tip)}`}
-          className="db-card__link"
+
+        <button
+          type="button"
+          className={`daily-tip__action-btn${isFavorited ? " daily-tip__action-btn--active" : ""}`}
+          onClick={handleFavorite}
+          disabled={busy === "favorite"}
+          aria-pressed={isFavorited}
+          title={isFavorited ? "Remove from favorites" : "Save to favorites"}
         >
+          <span aria-hidden="true">{isFavorited ? "❤️" : "🤍"}</span>
+          {isFavorited ? "Saved" : "Save"}
+        </button>
+
+        <button
+          type="button"
+          className="daily-tip__action-btn"
+          onClick={handleDismiss}
+          disabled={busy === "dismiss"}
+          title="Don't show me this tip again"
+        >
+          <span aria-hidden="true">👎</span>
+          Not for me
+        </button>
+
+        <button
+          type="button"
+          className="daily-tip__action-btn"
+          onClick={showNextTip}
+          title="Show me another tip"
+        >
+          <span aria-hidden="true">🔄</span>
+          Show another
+        </button>
+
+        <Link
+          href={`/chat?message=${encodeURIComponent("Tell me more about this health tip: " + currentTip.text)}`}
+          className="daily-tip__action-btn daily-tip__action-btn--link"
+        >
+          <span aria-hidden="true">💬</span>
           Ask about this
+        </Link>
+      </div>
+
+      <div className="db-daily-tip__footer">
+        <Link href="/tips" className="db-card__link">
+          Browse all tips &rarr;
         </Link>
       </div>
     </div>
   );
+}
+
+/**
+ * Fire-and-forget POST to record an interaction.
+ */
+async function postInteraction(tipId: string, action: string): Promise<void> {
+  try {
+    await fetch("/api/tips/interactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tip_id: tipId, action }),
+    });
+  } catch {
+    // Non-critical — interactions are best-effort.
+  }
 }

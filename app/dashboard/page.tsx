@@ -42,6 +42,7 @@ export default async function DashboardPage() {
           <Link href="/appointments" className="dashboard-header__link">Appointments</Link>
           <Link href="/insurance" className="dashboard-header__link">Insurance</Link>
           <Link href="/family" className="dashboard-header__link">Family</Link>
+          <Link href="/tips" className="dashboard-header__link">Tips</Link>
           <Link href="/settings/notifications" className="dashboard-header__link">Settings</Link>
           <Link href="/profile" className="dashboard-header__link">Profile</Link>
         </nav>
