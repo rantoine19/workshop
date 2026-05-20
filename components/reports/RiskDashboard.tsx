@@ -12,6 +12,8 @@ interface RiskFlagData {
   flag: "green" | "yellow" | "red";
   trend: string;
   confidence: number;
+  corrected: boolean;
+  original_value: number | null;
 }
 
 interface RiskSummary {
@@ -45,6 +47,12 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Edit mode state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const [editName, setEditName] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+
   const fetchRiskFlags = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -75,6 +83,83 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
   useEffect(() => {
     fetchRiskFlags();
   }, [fetchRiskFlags]);
+
+  /** Enter edit mode for a specific risk card */
+  function startEditing(flag: RiskFlagData) {
+    setEditingId(flag.id);
+    setEditValue(String(flag.value));
+    setEditName(flag.biomarker_name);
+  }
+
+  /** Cancel editing and revert to original display */
+  function cancelEditing() {
+    setEditingId(null);
+    setEditValue("");
+    setEditName("");
+  }
+
+  /** Save the correction via the API */
+  async function saveCorrection(flagId: string) {
+    setSaving(true);
+    try {
+      const payload: { value?: number; name?: string } = {};
+      const currentFlag = riskFlags.find((f) => f.id === flagId);
+      if (!currentFlag) return;
+
+      const numValue = Number(editValue);
+      if (editValue && numValue !== currentFlag.value) {
+        payload.value = numValue;
+      }
+      if (editName && editName !== currentFlag.biomarker_name) {
+        payload.name = editName;
+      }
+
+      // Nothing changed
+      if (Object.keys(payload).length === 0) {
+        cancelEditing();
+        return;
+      }
+
+      const response = await fetch(`/api/risk-flags/${flagId}/correct`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save correction");
+      }
+
+      const data = await response.json();
+      const updatedFlag = data.risk_flag as RiskFlagData;
+
+      // Update local state with the corrected flag
+      setRiskFlags((prev) =>
+        prev.map((f) => (f.id === flagId ? updatedFlag : f))
+      );
+
+      // Recalculate summary
+      setRiskFlags((prev) => {
+        const flags = prev.map((f) => (f.id === flagId ? updatedFlag : f));
+        setSummary({
+          total: flags.length,
+          green: flags.filter((f) => f.flag === "green").length,
+          yellow: flags.filter((f) => f.flag === "yellow").length,
+          red: flags.filter((f) => f.flag === "red").length,
+        });
+        return flags;
+      });
+
+      cancelEditing();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to save correction"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -187,6 +272,63 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
         <div className="risk-card-grid">
           {sortedFlags.map((flag) => {
             const isExpanded = expandedId === flag.id;
+            const isEditing = editingId === flag.id;
+            const isLowConfidence = (flag.confidence ?? 1) < 0.7;
+
+            if (isEditing) {
+              return (
+                <div
+                  key={flag.id}
+                  className={`risk-card risk-card--${flag.flag} risk-card--editing`}
+                >
+                  <div className="risk-card__header">
+                    <div className="risk-card__title-row">
+                      <input
+                        type="text"
+                        className="risk-card__edit-input risk-card__edit-input--name"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        aria-label="Biomarker name"
+                        disabled={saving}
+                      />
+                    </div>
+                    <div className="risk-card__value-row">
+                      <input
+                        type="number"
+                        className="risk-card__edit-input risk-card__edit-input--value"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        aria-label="Biomarker value"
+                        step="any"
+                        disabled={saving}
+                      />
+                      {getGoalText(flag) && (
+                        <span className="risk-card__goal">
+                          Goal: {getGoalText(flag)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="risk-card__edit-actions">
+                    <button
+                      className="risk-card__edit-save"
+                      onClick={() => saveCorrection(flag.id)}
+                      disabled={saving}
+                    >
+                      {saving ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      className="risk-card__edit-cancel"
+                      onClick={cancelEditing}
+                      disabled={saving}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <button
                 key={flag.id}
@@ -197,13 +339,23 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
                 <div className="risk-card__header">
                   <div className="risk-card__title-row">
                     <span className="risk-card__name">{flag.biomarker_name}</span>
-                    <span className={`risk-card__badge risk-card__badge--${flag.flag}`}>
-                      {FLAG_LABELS[flag.flag]}
-                    </span>
+                    <div className="risk-card__title-actions">
+                      {flag.corrected && (
+                        <span
+                          className="risk-card__corrected-badge"
+                          title={`You corrected this value from ${flag.original_value} to ${flag.value}`}
+                        >
+                          Corrected
+                        </span>
+                      )}
+                      <span className={`risk-card__badge risk-card__badge--${flag.flag}`}>
+                        {FLAG_LABELS[flag.flag]}
+                      </span>
+                    </div>
                   </div>
                   <div className="risk-card__value-row">
                     <span className={`risk-card__value risk-card__value--${flag.flag}`}>
-                      {(flag.confidence ?? 1) < 0.7 && (
+                      {isLowConfidence && (
                         <span className="risk-card__approximate" aria-label="Approximate value">~</span>
                       )}
                       {Number(flag.value).toLocaleString()}
@@ -213,8 +365,22 @@ export default function RiskDashboard({ reportId }: RiskDashboardProps) {
                         Goal: {getGoalText(flag)}
                       </span>
                     )}
+                    <button
+                      className={`risk-card__edit-btn${isLowConfidence ? " risk-card__edit-btn--prominent" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(flag);
+                      }}
+                      aria-label={`Edit ${flag.biomarker_name}`}
+                      title="Edit this value"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
                   </div>
-                  {(flag.confidence ?? 1) < 0.7 && (
+                  {isLowConfidence && (
                     <div className="risk-card__confidence-warning" role="alert">
                       Value may be inaccurate — verify against your report
                     </div>
