@@ -181,6 +181,10 @@ describe("Audit Logger", () => {
         "insurance_card.view",
         "insurance_card.photo_upload",
         "insurance_card.photo_delete",
+        "goal.activated",
+        "goal.paused",
+        "goal.deleted",
+        "goal.achieved",
       ];
 
       const resourceTypes: Record<AuditAction, AuditResourceType> = {
@@ -205,6 +209,10 @@ describe("Audit Logger", () => {
         "insurance_card.view": "insurance_card",
         "insurance_card.photo_upload": "insurance_card",
         "insurance_card.photo_delete": "insurance_card",
+        "goal.activated": "health_goal",
+        "goal.paused": "health_goal",
+        "goal.deleted": "health_goal",
+        "goal.achieved": "health_goal",
       };
 
       for (const action of actions) {

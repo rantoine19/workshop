@@ -6,6 +6,7 @@ import {
 import { generateActionItems, type FlaggedBiomarker, type UserProfile } from "@/lib/health/action-items";
 import { suggestRelatedTests } from "@/lib/health/related-tests";
 import { getBiomarkerKnowledge } from "@/lib/health/biomarker-knowledge";
+import type { StandardGoal } from "@/lib/health/standard-goals";
 
 export const CHAT_SYSTEM_PROMPT = `${PERSONA_PREAMBLE}
 
@@ -19,6 +20,7 @@ CRITICAL RULES:
 2. If the user asks for a diagnosis or treatment, politely redirect: "I can help you understand what the numbers mean, but for medical advice, please talk to your doctor."
 3. If you don't have enough information to answer, say so honestly.
 4. When explaining lab values, use everyday comparisons when possible (e.g., "Think of cholesterol like traffic in your blood vessels").
+5. You have visibility into the patient's active health goals. Reference them when relevant, especially when discussing progress or lifestyle changes.
 
 EXAMPLE GOOD RESPONSE (short, interactive):
 "Your blood pressure reading is 190/140. Normal is usually around 120/80. Think of it like water pressure in a hose — yours is running pretty high right now.
@@ -69,6 +71,29 @@ export function formatMedicationForContext(med: StructuredMedication): string {
   return parts.join(" ");
 }
 
+export interface ActiveGoalContext {
+  goal: StandardGoal;
+  progress: number;
+  currentValue: number | null;
+}
+
+export function buildGoalsContext(activeGoals: ActiveGoalContext[]): string {
+  if (!activeGoals || activeGoals.length === 0) return "";
+
+  const lines = activeGoals.map((g) => {
+    const { goal, progress, currentValue } = g;
+    const dir = goal.direction === "lower" ? "<" : ">";
+    const currentText =
+      currentValue !== null
+        ? `current ${currentValue}${goal.unit ? " " + goal.unit : ""}`
+        : "no current reading";
+    const targetText = `target ${dir}${goal.targetValue}${goal.unit ? " " + goal.unit : ""}`;
+    return `- ${goal.title}: ${progress}% progress (${currentText}, ${targetText})`;
+  });
+
+  return `User's active health goals:\n${lines.join("\n")}`;
+}
+
 export function buildHealthContext(
   profile: {
     gender?: string | null;
@@ -81,7 +106,8 @@ export function buildHealthContext(
     activity_level?: string | null;
     sleep_hours?: string | null;
   },
-  structuredMedications?: StructuredMedication[]
+  structuredMedications?: StructuredMedication[],
+  activeGoals?: ActiveGoalContext[]
 ): string {
   const parts: string[] = [];
 
@@ -120,9 +146,16 @@ export function buildHealthContext(
     parts.push(`Sleep: ${profile.sleep_hours}`);
   }
 
-  if (parts.length === 0) return "";
+  const goalsBlock = buildGoalsContext(activeGoals ?? []);
 
-  return `Patient health profile:\n${parts.join("\n")}\n\nUse this information to personalize your responses. For example, if the patient has diabetes, pay extra attention to glucose and A1C values.`;
+  if (parts.length === 0 && !goalsBlock) return "";
+
+  const profileBlock =
+    parts.length > 0
+      ? `Patient health profile:\n${parts.join("\n")}\n\nUse this information to personalize your responses. For example, if the patient has diabetes, pay extra attention to glucose and A1C values.`
+      : "";
+
+  return [profileBlock, goalsBlock].filter(Boolean).join("\n\n");
 }
 
 const MAX_MULTI_REPORT_CHARS = 12000; // ~3000 tokens
