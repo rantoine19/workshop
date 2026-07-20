@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { getClaudeClient } from "@/lib/claude/client";
-import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext, buildEnrichedContext, type StructuredMedication } from "@/lib/claude/chat-prompts";
+import { CHAT_SYSTEM_PROMPT, buildReportContext, buildHealthContext, buildMultiReportContext, buildEnrichedContext, type StructuredMedication, type ActiveGoalContext } from "@/lib/claude/chat-prompts";
 import { lookupCondition } from "@/lib/health/nlm-api";
+import { calculateProgress, getGoalById } from "@/lib/health/standard-goals";
+import { fetchLatestBiomarkerValue } from "@/lib/health/goal-progress";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
@@ -113,7 +115,34 @@ export async function POST(request: Request) {
     frequency: m.frequency,
   }));
 
-  const healthContext = profileData ? buildHealthContext(profileData, structuredMeds) : "";
+  // Load active health goals (#150) so chat can reference user progress.
+  const { data: activeGoalRows } = await supabase
+    .from("health_goals")
+    .select("goal_id, starting_value, current_value")
+    .eq("user_id", user.id)
+    .is("family_member_id", null)
+    .eq("status", "active");
+
+  const activeGoals: ActiveGoalContext[] = [];
+  for (const row of activeGoalRows ?? []) {
+    const goal = getGoalById(row.goal_id);
+    if (!goal) continue;
+    const current = await fetchLatestBiomarkerValue(
+      supabase,
+      user.id,
+      null,
+      goal
+    );
+    const starting =
+      row.starting_value !== null ? Number(row.starting_value) : null;
+    const progress =
+      current !== null ? calculateProgress(goal, current, starting) : 0;
+    activeGoals.push({ goal, progress, currentValue: current });
+  }
+
+  const healthContext = (profileData || activeGoals.length > 0)
+    ? buildHealthContext(profileData ?? {}, structuredMeds, activeGoals)
+    : "";
 
   // Load report context — single report if report_id provided, otherwise multi-report
   let reportContext = "";

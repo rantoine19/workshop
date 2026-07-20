@@ -10,6 +10,8 @@ import { QuickStats } from "./quick-stats";
 import { DailyTip } from "./daily-tip";
 import { UpcomingAppointments } from "./upcoming-appointments";
 import { RemindersCard } from "./reminders-card";
+import { ActiveGoals } from "./active-goals";
+import { GoalAchievementBanner } from "./goal-achievement-banner";
 import ProfileSwitcher from "@/components/ui/ProfileSwitcher";
 import { useActiveProfile } from "@/hooks/useActiveProfile";
 
@@ -71,6 +73,9 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
 
   return (
     <div className="dashboard__grid">
+      {/* Goal achievement celebration banner (#150) */}
+      <GoalAchievementBanner />
+
       {/* Left Column */}
       <div className="dashboard__col-left">
         {/* Smart Reminders */}
@@ -142,6 +147,9 @@ export function DashboardGrid({ displayName }: DashboardGridProps) {
 
         {/* Upcoming Appointments */}
         <UpcomingAppointments activeProfileId={activeProfileId} />
+
+        {/* Active Health Goals (#150) */}
+        <ActiveGoals />
 
         {/* Recent Reports */}
         <RecentReports activeProfileId={activeProfileId} />

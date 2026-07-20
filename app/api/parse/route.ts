@@ -5,6 +5,7 @@ import { applyServerSideFlags } from "@/lib/health/flag-biomarker";
 import { normalizeBiomarkerName } from "@/lib/health/normalize-biomarker";
 import { detectLabFormatFromFilename, resolveLabProvider } from "@/lib/health/detect-lab-format";
 import { findMatchingExamples, storeExtractionExample, incrementExampleUsage } from "@/lib/health/example-library";
+import { refreshGoalsForUser } from "@/lib/health/goal-progress";
 import { logAuditEvent, getClientIp } from "@/lib/audit/logger";
 import { NextResponse } from "next/server";
 
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
   // Fetch report and verify ownership (RLS handles this)
   const { data: report, error: reportError } = await supabase
     .from("reports")
-    .select("id, file_path, file_type, status, user_id")
+    .select("id, file_path, file_type, status, user_id, family_member_id")
     .eq("id", body.report_id)
     .single();
 
@@ -300,6 +301,23 @@ export async function POST(request: Request) {
       resourceId: report.id,
       ipAddress: getClientIp(request),
     });
+
+    // Refresh active health goals (#150) — updates current values and marks
+    // any newly-achieved goals. Fire-and-forget: goal refresh failures must
+    // not break the parse pipeline.
+    refreshGoalsForUser(supabase, user.id, report.family_member_id ?? null)
+      .then((newlyAchieved) => {
+        for (const goalId of newlyAchieved) {
+          logAuditEvent({
+            userId: user.id,
+            action: "goal.achieved",
+            resourceType: "health_goal",
+            resourceId: goalId,
+            ipAddress: getClientIp(request),
+          });
+        }
+      })
+      .catch((err) => console.error("[PARSE] Goal refresh failed:", err));
 
     return NextResponse.json(
       {
