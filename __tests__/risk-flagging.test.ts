@@ -176,6 +176,12 @@ describe("Risk Flags API Contract", () => {
         from: mockFrom,
       }),
     }));
+
+    // Mock audit logger to prevent fire-and-forget calls from interfering
+    vi.doMock("@/lib/audit/logger", () => ({
+      logAuditEvent: vi.fn(),
+      getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
+    }));
   });
 
   function buildRequest(reportId?: string): Request {
@@ -286,14 +292,25 @@ describe("Risk Flags API Contract", () => {
           }),
         };
       }
-      // risk_flags table
+      if (callCount === 3) {
+        // risk_flags table
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockResolvedValue({
+                data: mockFlags,
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      // biomarker_corrections table (new — #136)
       return {
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            order: vi.fn().mockResolvedValue({
-              data: mockFlags,
-              error: null,
-            }),
+          in: vi.fn().mockResolvedValue({
+            data: [],
+            error: null,
           }),
         }),
       };
@@ -309,6 +326,9 @@ describe("Risk Flags API Contract", () => {
     expect(body.summary.red).toBe(1);
     expect(body.summary.total).toBe(2);
     expect(body.disclaimer).toContain("informational purposes only");
+    // New: correction info enrichment (#136)
+    expect(body.risk_flags[0].corrected).toBe(false);
+    expect(body.risk_flags[0].original_value).toBeNull();
   });
 });
 

@@ -181,6 +181,7 @@ describe("Audit Logger", () => {
         "insurance_card.view",
         "insurance_card.photo_upload",
         "insurance_card.photo_delete",
+        "biomarker.correct",
       ];
 
       const resourceTypes: Record<AuditAction, AuditResourceType> = {
@@ -205,6 +206,7 @@ describe("Audit Logger", () => {
         "insurance_card.view": "insurance_card",
         "insurance_card.photo_upload": "insurance_card",
         "insurance_card.photo_delete": "insurance_card",
+        "biomarker.correct": "risk_flag",
       };
 
       for (const action of actions) {
